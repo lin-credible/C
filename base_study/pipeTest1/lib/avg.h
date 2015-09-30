@@ -1,0 +1,1 @@
+float avg(float a, float b);
