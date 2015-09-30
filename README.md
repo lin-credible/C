@@ -1,3 +1,3 @@
 # C
 
-我还是是很喜欢C语言
+Actually, I still like C mostly.
