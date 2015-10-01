@@ -1,7 +1,8 @@
-####Sum
+####Pointer.c
+#####Sum
 ```
 Global:  &global
- = (int *) 0x100001018 <global>
+= (int *) 0x100001018 <global>
 Static:  &count
 = (int *) 0x100001020 <square.count>
 = (int *) 0x10000101c <rect.count>
@@ -9,14 +10,14 @@ Function: &square
 = (int (*)(int)) 0x100000ea0 <square>
 ```
 
-####Memory
+#####Memory
 ![linux_memory_management](./mem.png)
 
-####Details(gdb)
+#####Details(gdb)
 ```
 (gdb) start
 ...
-Temporary breakpoint 1, main () at array_pointer.c:25
+Temporary breakpoint 1, main () at pointer.c:25
 25		int a = 2;
 (gdb) n
 26		int b = 6;
@@ -47,11 +48,11 @@ $8 = (int (**)(int)) 0x7fff5fbffa10
 (gdb) n
 31		int s1 = square(a);
 (gdb) s
-square (a=2) at array_pointer.c:17
+square (a=2) at pointer.c:17
 17		count++;
 (gdb) bt
-#0  square (a=2) at array_pointer.c:17
-#1  0x0000000100000f3b in main () at array_pointer.c:31
+#0  square (a=2) at pointer.c:17
+#1  0x0000000100000f3b in main () at pointer.c:31
 (gdb) n
 18		global++;
 (gdb) p &count
@@ -61,12 +62,12 @@ $9 = (int *) 0x100001020 <square.count>
 (gdb) p &global
 $10 = (int *) 0x100001018 <global>
 (gdb) s
-rect (a=2, b=2) at array_pointer.c:8
+rect (a=2, b=2) at pointer.c:8
 8		count++;
 (gdb) bt
-#0  rect (a=2, b=2) at array_pointer.c:8
-#1  0x0000000100000eda in square (a=2) at array_pointer.c:19
-#2  0x0000000100000f3b in main () at array_pointer.c:31
+#0  rect (a=2, b=2) at pointer.c:8
+#1  0x0000000100000eda in square (a=2) at pointer.c:19
+#2  0x0000000100000f3b in main () at pointer.c:31
 (gdb) n
 9		global++;
 (gdb) p &count
@@ -78,17 +79,17 @@ $12 = (int *) 0x100001018 <global>
 (gdb) n
 11		return s;
 (gdb) 
-square (a=2) at array_pointer.c:20
+square (a=2) at pointer.c:20
 20		return s;
 (gdb) 
-main () at array_pointer.c:32
+main () at pointer.c:32
 32		int s2 = rect(a, b);
 (gdb) s
-rect (a=2, b=6) at array_pointer.c:8
+rect (a=2, b=6) at pointer.c:8
 8		count++;
 (gdb) bt
-#0  rect (a=2, b=6) at array_pointer.c:8
-#1  0x0000000100000f49 in main () at array_pointer.c:32
+#0  rect (a=2, b=6) at pointer.c:8
+#1  0x0000000100000f49 in main () at pointer.c:32
 (gdb) n
 9		global++;
 (gdb) p &count
@@ -98,10 +99,28 @@ $13 = (int *) 0x10000101c <rect.count>
 (gdb) 
 11		return s;
 (gdb) 
-main () at array_pointer.c:33
+main () at pointer.c:33
 33		printf("s1=%d\ns2=%d\n", s1, s2);
 (gdb) 
 s1=4
 s2=12
 34		return 0;
+```
+
+####Somethings ??
+#####array_pointer.c
+```
+*p=8        //Why *p = &b, ( why "*p = &a" cann't work?)
+*p=3
+*p=0
+*p=1
+*p=10
+*p=100
+--------------
+p[0]=8
+p[1]=3
+p[2]=0
+p[3]=1
+p[4]=10
+p[5]=100
 ```
