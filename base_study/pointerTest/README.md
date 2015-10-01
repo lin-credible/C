@@ -1,5 +1,5 @@
 ####Sum
-
+```
 Global:  &global
  = (int *) 0x100001018 <global>
 Static:  &count
@@ -7,6 +7,7 @@ Static:  &count
 = (int *) 0x10000101c <rect.count>
 Function: &square
 = (int (*)(int)) 0x100000ea0 <square>
+```
 
 ####Memory
 ![linux_memory_management](./mem.png)
