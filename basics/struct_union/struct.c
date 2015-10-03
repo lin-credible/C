@@ -47,4 +47,5 @@ M)
 	printf("p2_name=%s\n", weapon_p2->name); // weapon_p2-name weapon_2[0].name
 	weapon_p2++; //weapon_2 + 1 weapon_2[1]
 	printf("p2_name2=%s\n", weapon_p2->name);
+    return 0;
 }
