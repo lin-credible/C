@@ -1,0 +1,10 @@
+mysql -uroot -p
+create database ds;
+use ds;
+create table table1 (id varchar(50), content varchar(50));
+insert into table1 values (1, 'sxkj');
+select * from table1;
+
+show databases;
+show talbes;
+desc table1;

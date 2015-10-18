@@ -1,0 +1,11 @@
+#!/usr/bin/expect -f
+#
+set ip [ lindex $argv 0 ]
+spawn ftp $ip
+expect "Name*"
+send "ftp\r"
+expect "Password:*"
+send "\r"
+expect "ftp>"
+send "quit\r"
+expect eof

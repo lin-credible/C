@@ -1,0 +1,2191 @@
+<!DOCTYPE NoteCase-File>
+<!--LastNote:0-->
+<HTML>
+<HEAD>
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type">
+<meta name="generator" content="NoteCase 1.9.8">
+<TITLE></TITLE>
+</HEAD>
+<BODY>
+<DL>
+<DT>Linux_shell_Bash脚本编程指南</DT>
+<!--property:date_created=1330321662-->
+<!--property:date_modified=1342698645-->
+<DD>
+========================================================<BR>
+想真正学习脚本编程的唯一途径就是亲自动手编写脚本.<BR>
+========================================================<BR>
+<BR>
+要注意,在每个脚本的开头都使用 sha-bang ( #!), 这意味着告诉你的系统这个文件的执行需要指定一<BR>
+个解释器. #! 实际上是一个2字节的 [1] 魔法数字, 这是指定一个文件类型的特殊标记, 换句话说,<BR>
+在这种情况下, 指的就是一个可执行的脚本(键入man magic来获得关于这个迷人话题的更多详细信息).<BR>
+在sha-bang之后接着是一个路径名. 这个路径名就是解释脚本中命令的解释程序所在的路径, 可能是一<BR>
+个shell, 也可能是一个程序语言, 也可能是一个工具包中的命令程序. 这个解释程序从头开始解释并<BR>
+且执行脚本中的命令(从sha-bang行下边的一行开始), 忽略注释. [2]<BR>
+1 #!/bin/sh<BR>
+2 #!/bin/bash<BR>
+3 #!/usr/bin/perl<BR>
+4 #!/usr/bin/tcl<BR>
+5 #!/bin/sed -f<BR>
+6 #!/usr/awk -f<BR>
+上边每一个脚本头的行都指定了一个不同的命令解释器, 如果是/bin/sh, 那么就是默认shell (在<BR>
+Linux系统上默认就是bash), 否则的话就是其他解释器. [3] 使用#!/bin/sh, 因为大多数的商业UNIX<BR>
+系统上都是以Bourne shell作为默认shell, 这样可以使脚本移植到non-Linux的机器上, 虽然这将会牺<BR>
+牲Bash一些独特的特征. 但是脚本将与POSIX [4] 的sh标准相一致.<BR>
+注意&quot;sha-bang&quot;后边给出的路径名必须是正确的, 否则将会出现一个错误消息<BR>
+<BR>
+<BR>
+<BR>
+最后一步, 在脚本被测试和debug之后, 你可能想把它移动到 /usr/local/bin下, (当然是以root身份),<BR>
+来让你的脚本对所有用户都有用. 这样以来, 用户就可以在命令行上简单的输入scriptname [ENTER] 就<BR>
+可以运行这个脚本了.<BR>
+<BR>
+<BR>
+为什么不直接使用scriptname 来调用脚本? 如果你当前的目录下($PWD) 正好是<BR>
+scriptname所在的目录, 为什么它运行不了呢? 失败的原因是出于安全考虑, 当前目录并<BR>
+没有被加在用户的 $PATH环境变量中. 因此,在当前目录下调用脚本必须使<BR>
+用./scriptname这种形式.<BR>
+<BR>
+<BR>
+命令是不能放在同一行上注释的后边的. 因为没有办法把注释结束掉, 好让<BR>
+同一行上后边的&quot;代码生效&quot;. 只能够另起一行来使用下一个命令.<BR>
+<BR>
+******************************************************************************************************<BR>
+&lt;4&gt;<b><span style="color:#0000ff">变量和参数的介绍：</span></b><BR>
+变量是脚本编程中进行数据表现的一种方法. 说白了, 变量不过是计算机为了保留数据项, 而在内存中<BR>
+分配的一个位置或一组位置的标识或名字.<BR>
+变量既可以出现在算术操作中, 也可以出现在字符串分析过程中.<BR>
+<BR>
+<span style="color:#0000ff">变量替换</span><BR>
+变量的名字就是变量保存值的地方. 引用变量的值就叫做变量替换.<BR>
+            <BR>
+<span style="color:#ff0000">+++++++++++++++++++++++++++++++++++++++++</span><BR>
+a=`echo Hello!`          # 把'echo'命令的结果传给变量'a'<BR>
+echo $a<BR>
+# 注意, 如果在一个#+ 的命令替换结构中包含一个(!) 的话,<BR>
+#+ 那么在命令行下将无法工作.<BR>
+#+ 因为这触发了Bash 的&quot;历史机制.&quot;<BR>
+# 但是, 在脚本中使用的话, 历史功能是被禁用的, 所以就能够正常的运行.<BR>
+<span style="color:#ff0000">+++++++++++++++++++++++++++++++++++++++++<BR>
+</span>nice!<BR>
+<span style="color:#0000ff">Bash变量是不区分类型的</span><BR>
+不像其他程序语言一样, Bash并不对变量区分&quot;类型&quot;. 本质上, Bash变量都是字符串. 但是依赖于具体<BR>
+的上下文, Bash也允许比较操作和整数操作. 其中的关键因素就是, 变量中的值是否只有数字.<BR>
+<BR>
+----------------------------------------------------------------------           <BR>
+shell&gt;a=2344<BR>
+shell&gt;b=${a/23/BB}     将&quot;23&quot; 替换成&quot;BB&quot;. $b=BB34<BR>
+-----------------------------------------------------------------------<BR>
+                <BR>
+b=${a/23/BB}  	 #将&quot;23&quot; 替换成&quot;BB&quot;.<BR>
+              			# 这将把变量b从整型变为字符串.<BR>
+echo &quot;b = $b&quot; 		# b = BB35    <BR>
+declare -i b 		 #即使使用declare 命令也不会对此有任何帮助.<BR>
+echo &quot;b = $b&quot; 		# b = BB35<BR>
+let &quot;b += 1&quot;  		# BB35 + 1 =<BR>
+echo &quot;b = $b&quot; 		#b=1<BR>
+echo<BR>
+c=BB34<BR>
+echo &quot;c = $c&quot; 		# c = BB34<BR>
+                		<BR>
+d=${c/BB/23}  		#将&quot;BB&quot; 替换成&quot;23&quot;.<BR>
+              			#这使得变量$d 变为一个整形.<BR>
+echo &quot;d = $d&quot; 		# d = 2334<BR>
+let &quot;d += 1&quot;  		# 2334 + 1 =<BR>
+echo &quot;d = $d&quot; 		# d = 2335<BR>
+echo<BR>
+--------------------------------------------------------------------------<BR>
+<BR>
+在通常情况下, 每个进程都有自己的&quot;环境&quot;, 这个环境是由一组变量组成的, 这些变量中存有进程可能需要引用的信息. <BR>
+在这种情况下, shell与一个一般的进程没什么区别.<BR>
+<BR>
+每次当一个shell启动时, 它都将创建适合于自己环境变量的shell变量. 更<BR>
+新或者添加一个新的环境变量的话, 这个shell都会立刻更新它自己的环境<BR>
+(译者注: 换句话说, 更改或增加的变量会立即生效), 并且所有的shell子<BR>
+进程(即这个shell所执行的命令)都会继承这个环境. (译者注: 准确地说,<BR>
+应该是后继生成的子进程才会继承Shell的新环境变量, 已经运行的子进程<BR>
+并不会得到它的新环境变量).<BR>
+<BR>
+<span style="color:#ff0000">分配给环境变量的空间是有限的. 创建太多环境变量, 或者给一个环境变量分配太多的空间都会引起错误.</span><BR>
+<span style="color:#ff0000"><BR>
+</span>一个脚本只能够export变量到这个脚本所产生的子进程, 也就是说只能够对<BR>
+这个脚本所产生的命令和进程起作用. 如果脚本是从命令行中调用的, 那么<BR>
+这个脚本所export的变量是不能影响命令行环境的. 也就是说, 子进程是不<BR>
+能够export变量来影响产生自己的父进程的环境的.<BR>
+<BR>
+$0 就是脚本文件自身的名字, $1 是第一个参数, $2 是第二个参数, $3 是第三个参数, 然后是第<BR>
+四个. [1] $9 之后的位置参数就必须用大括号括起来了, 比如, ${10} , ${11} , ${12} .<BR>
+<BR>
+两个比较特殊的变量$*和$@ 表示所有的位置参数.<BR>
+<BR>
+P64<BR>
+<span style="color:#ff0000"><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+</span><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+
+</DD>
+<DT>New words</DT>
+<!--property:date_created=1330321695-->
+<!--property:date_modified=1330321990-->
+<DD>
+<b>consecutive</b>		连续的<BR>
+<b>insensitive</b>		感觉迟钝的<BR>
+<b>interpret</b>			解释	
+</DD>
+<DT>Linux_shell 脚本攻略</DT>
+<!--property:date_created=1336706543-->
+<!--property:date_modified=1336706728-->
+<DD>
+①设置提示字符串，可以输入：<BR>
+slynux@localhost: ~$ PS1=&quot;PROMPT&gt;&quot;<BR>
+PROMPT&gt; Type commands here # 提示字符串已经改变<BR>
+<BR>
+~$ PS1=&quot;\e[1;31mPROMPT--&gt;&quot;		///加了颜色…<BR>
+
+</DD>
+<DT>Linux_shell(曾老师)</DT>
+<!--property:date_created=1336718361-->
+<!--property:date_modified=1342684962-->
+<DD>
+	<BR>
+	<BR>
+.bashrc(系统登录时执行的脚本)  .bash_logout (系统登出时执行的脚本)<BR>
+<BR>
+由相同的变量名，会返回不同的变量值，这个就是环境变量的作用！<BR>
+=====================================================	<BR>
+	shell下的重定向<BR>
+	0--&gt;标准输入<BR>
+	1--&gt;标准输出<BR>
+	2--&gt;错误输出<BR>
+=====================================================<BR>
+（重定向里面的实现，是C语言的，用到了函数 fwrite）<BR>
+	fwrite	--&gt; a --&gt; 从文件头部写入	w ---&gt; 从文件尾部写入<BR>
+			     &gt;    (重写文件)		&gt;&gt;  	(追加信息)<BR>
+=====================================================<BR>
+ls -l /etc/ &gt; /tmp/etc_file<BR>
+locate passwd &gt; /tmp/locate<BR>
+tail -f /var/log/messages &gt; /dev/tty8<BR>
+mail -s subject user@localhost &lt; file<BR>
+ls -l abc 2&gt; err_file<BR>
+ls -l abc &gt;&gt; std_file<BR>
+ls -l abc &gt;std_file 2&gt;err_file<BR>
+ls -l abc &gt;std_file 2&gt;&amp;1<BR>
+ls -l abc  &amp;&gt; all output<BR>
+ls -l abc 2 &gt;&gt; err_file<BR>
+=====================================================<BR>
+<BR>
+<BR>
+ls -l abc &gt; std_file 2&gt;&amp;1		/// &quot;2&gt;&amp;1&quot;将错误输出，重定向到正确输出！<BR>
+ls -l abc &amp;&gt; all output 		///错误输出和正确输出全部重定向了<BR>
+<BR>
+管道打开了一根内存通道！<BR>
+<BR>
+===================================<BR>
+command 1					command 2<BR>
+0 标准输入					0 标准输入<BR>
+1 标准输出					1 标准输出<BR>
+2 错误输出					2 错误输出<BR>
+3 管道输入					3 管道输入<BR>
+4 管道输出					4 管道输出<BR>
+====================================<BR>
+ls -l /etc/  | grep passwd<BR>
+grep boot /etc* -R  | more<BR>
+ls -l /etc | more<BR>
+<BR>
+<BR>
+<BR>
+如何区分 shell 的内部命令和外部命令！在 shell下输入 help 能找到的命令，都是 shell 的内部命令！<BR>
+nologin这种 shell 是为了让进程在跑的时候，是一个普通用户，避免了被攻击的时候，有管理员的权限！<BR>
+<BR>
+grep 寻找磁盘内容文件中的数据，屏幕输出匹配部分<BR>
+<BR>
+<BR>
+shell&gt;grep /sbin/nologin passwd<BR>
+shell&gt;grep -v /sbin/nologin passwd<BR>
+shell&gt;grep -c /sbin/nologin passwd<BR>
+( &lt;=&gt;grep /sbin/nologin passwd | wc -l )<BR>
+<BR>
+shell&gt;grep aa test	///匹配 test 文件中 有 aa 的行<BR>
+shell&gt;grep -w aa test    ///匹配 test 文件中 有单词 aa 的行<BR>
+shell&gt;grep -wo aa test   ///列出 test 文件中所有的单词 aa<BR>
+shell&gt;grep -wo aa test | wc -l     ///计算出 test 中单词 aa 的个数！<BR>
+<BR>
+shell&gt;head passwd    ///看 passwd 的前十行 <BR>
+shell&gt;grep -A 2 sync passwd        ///匹配 passwd 中有 sync的行，然后将 （After）之后的 后两行也输出！<BR>
+shell&gt;grep -B 2 sync passwd	///匹配 passwd 中有 sync的行，然后将 （Before）之后的 后两行也输出！<BR>
+shell&gt;grep -C 2 sync passwd	///匹配 passwd 中有 sync的行，然后将 （Center）之后的 上下两行也输出！<BR>
+shell&gt;grep --with-filename sync passwd		///匹配 passwd 文件中的 sync ，并且将文件的名字也输出！<BR>
+shell&gt;grep --with-filename sync *		///匹配当前目录中的所有文件中的 sync ，并且将文件的名字也输出！<BR>
+shell&gt;grep --no-filename sync *		///匹配 passwd<BR>
+shell&gt;grep -n sync passwd 		///-n  line number<BR>
+shell&gt;grep -l sync passwd 			///只需要有 sync 的文件的文件名<BR>
+shell&gt;grep -l sync *<BR>
+shell&gt;grep -i cc test				///忽略大小写<BR>
+shell&gt;grep -m 3 /sbin/nologin passwd	///只匹配出前面三行匹配成功的行！<BR>
+<BR>
+中间讲到了正则表达式！很明显，这个需要专题讲解！对我而言！呵呵呵……<BR>
+注意：<BR>
+shell&gt;egrep &quot;ro{3,6}t&quot; test		///要加双引号或者单引号<BR>
+注意，貌似这种用法 {,m} 不行~<BR>
+<BR>
+find----&gt;文件名，目录，特殊文件属性<BR>
+grep---&gt;文件里面的内容<BR>
+<BR>
+shell&gt;find -name passwd<BR>
+shell&gt;find /tmp/test/*  -perm  532      ///-perm 根据权限来找文件！根据权限来很精准地找！  即： -r-x-wx-w-  <BR>
+shell&gt;find /tmp/test/*  -perm -532      ///若加了 &quot;-532&quot; 它就可以   -r-x-wx-w- 以及包含这些权限的，如： -rwx-wx-w-等也能被找到！<BR>
+shell$&gt;find /tmp/test* -readable 	      /// -readable || -writable ||  -executable 这三个属性一般是普通用户来查找的！这三个属性在 rhel5.0 上时不允许使用的！<BR>
+<BR>
+shell&gt;chown terry file1 file2<BR>
+shell&gt;chown ftp file3 file4<BR>
+shell&gt;find -user terry<BR>
+shell&gt;find -user ftp<BR>
+shell&gt;chgrp daemon file5<BR>
+<BR>
+index  inode --&gt; uid --&gt; 501 --&gt; /etc/passwd (loginname)<BR>
+<BR>
+shell&gt;find /tmp/test/*  -nouser			//没有 用户 id 所对定的名字~<BR>
+shell&gt;find /tmp/test/*  -nouser	-nogroup<BR>
+<BR>
+type --&gt; f (file) , l (synlink), b (block device &lt;sda&gt; ), c (character device) , s (socket), d (directory)<BR>
+<BR>
+shell&gt;find -name passwd<BR>
+shell&gt;find -name passwd -type f<BR>
+shell&gt;find / size +200M <BR>
+shell&gt;dd if=/dev/zero of=1.img bs=1M count=10<BR>
+shell&gt;dd if=/dev/zero of=2.img bs=1M count=12<BR>
+shell&gt;dd if=/dev/zero of=3.img bs=1M count=8<BR>
+<BR>
+shell&gt;find -size 10M    ///找出刚好10兆的文件或目录<BR>
+shell&gt;find -size -10M    ///小于10兆<BR>
+shell&gt;find -size +10M    ///大于10兆<BR>
+<BR>
+shell&gt;find /etc/* -maxdepth 0 -name passwd	///目录深度， 0 指当前~<BR>
+/etc/passwd<BR>
+<BR>
+<BR>
+<b>amin  --&gt; 1分钟      atime --&gt; 24小时</b><BR>
+<b>--------------------------------------11:59-----------------------------amin 12:00<BR>
+		+1                              1                -1</b><BR>
+<b>amin ,  cmin,  mmin <BR>
+</b><BR>
+<BR>
+shell&gt;stat file<BR>
+Access:  --------&gt;(cat, tail, head, more, less ...只要我们对这个文件读取过，它就修改这个时间！)<BR>
+			当前虽然文件没有内容，但是我发生了一个读的操作！ rhel 6 与 rhel 5 有一个区别！6 只会记录文件创建后，第一次读操作时候<BR>
+			的时间！之后就不更改了！避免了频繁地对索引节点的修改和读写！<BR>
+Modify: ----------&gt; vim, echo &gt;  (modify time)---&gt;change time! (若改变了 modify time, 伴随着 change time 也会被修改！)<BR>
+Change:--------&gt;( chown, chgrp, chmod ---&gt;change time)<BR>
+<BR>
+<BR>
+<BR>
+shell&gt;find /tmp/test/*  -amin -5			///5分钟内被访问过！<BR>
+shell&gt;find /tmp/test/*  -cmin -2			///2分钟内被改变过！<BR>
+<BR>
+shell&gt;find /etc/* -mtime -1                         ///1天到现在被修改过的文件！<BR>
+<BR>
+Find 格式化！<BR>
+<BR>
+shell&gt;find /etc/* -mtime -1 | xargs tar cf new.tar			///xargs  将得到的结果，作为 tar cf new.tar 后面的一个参数~<BR>
+<BR>
+shell&gt;tar new.tar -C /tmp/test<BR>
+<BR>
+shell&gt;find /etc/ -mtime -1 -exec cp -r {} /tmp/test/backup/. \;<BR>
+<BR>
+shell&gt;find -name &quot;a?&quot;<BR>
+./a1<BR>
+./a2<BR>
+./a3<BR>
+shell&gt;find -name &quot;a?&quot; -print0		///但是没有换行~<BR>
+./a1 ./a2 ./a3                               <BR>
+<BR>
+shell&gt;find -name &quot;a?&quot; -printf &quot;%AY-%Am-%Ad %AH:%AM\t%u\t%s\t%f \n&quot;<BR>
+(格式化输出~)<BR>
+<BR>
+shell常用命令<BR>
+tee<BR>
+	lspci -v | tee lspci.out | less<BR>
+paste			能将两个文档左右合并为一个文档！既以行的形式合并~（而 cat file1 file2 是上下合并的！）<BR>
+wc			<BR>
+	wc -l,  wc -w,  wc -c<BR>
+tr<BR>
+	tr 'A-Z' 'a-z' &lt; file<BR>
+uniq			//去重<BR>
+	cat file | uniq<BR>
+sort			//排序<BR>
+	cat file | sort<BR>
+<BR>
+lspci ----&gt; 能查询出你当前的一些硬件的信息！<BR>
+重定向不能有屏幕的输出了！但是如果想既在保存的同时还有屏幕输出呢？这时候就要用到 tee 命令！<BR>
+shell&gt;wc b<BR>
+10 15 43 b          ---&gt;行数， 单词数， 字符个数(包括空格)， 文件名<BR>
+<BR>
+shell&gt;cat /etc/passwd | tr 'a-z' 'A-Z'			//小写转换成大写<BR>
+shell&gt;route -n | grep UG | tr -s ' ' ' '			//去掉重复的空格<BR>
+<BR>
+shell&gt;cat a | sort | uniq -c     // -c 统计重复的个数<BR>
+<BR>
+cut -d 分隔符 -f 显示列<BR>
+shell&gt;tail -l /etc/passwd | cut -d : -f 1,7,6                   ///只是后面的列还是会按原来的顺序输出！？用后面的 awk 可以解决！<BR>
+head /tail<BR>
+grep<BR>
+find <BR>
+diff<BR>
+cut<BR>
+	cut -f4 file<BR>
+	cut -f3 -d:<BR>
+	cut -f2 -d&quot; &quot; file<BR>
+	cut -c2-5 file<BR>
+<BR>
+{}	&lt;---组合，eg: touch a{1,2,3,4} --&gt;a1,a2,a3,a4 ! 另： touch {0,1,2,3}{0,1,2,3} --&gt;会创建16个文件！为：00,01,02,03,10,11,12.....<BR>
+[]	&lt;---选择，eg: grep ro[op]t  --&gt; root  ropt <BR>
+		&lt;---判断  &lt;---if [ ]  while [判断]<BR>
+()	&lt;---数组	&lt;--( 0 1 2 3 4 )<BR>
+		&lt;---判断  不推荐  if (( 判断 ))<BR>
+<BR>
+命令分隔符<BR>
+&amp;&amp;		与，必须第一个命令成功，才执行第二个命令<BR>
+| | 		或，第一个命令失败，才执行第二个命令<BR>
+;		命令分隔符<BR>
+<BR>
+&quot;		--&gt; 保留变量信息		echo &quot;my shell is: $SHELL&quot;<BR>
+'		--&gt;字符，不保留变量<BR>
+·		--&gt;执行程序 (在 1 的左边~)<BR>
+· · &lt;==&gt; $(command)<BR>
+shell&gt;echo 'my $SHELL is:' &quot;$SHELL&quot;<BR>
+<BR>
+shell中常见语法<BR>
+	$#	程序命令行参数的数量<BR>
+	$0	程序名<BR>
+	$*	以（&quot;$1 $2...&quot;）的形式保存所有输入的命令行参数<BR>
+	$@	以 ( &quot;$1&quot; &quot;$2&quot;...) 的形式保存所有输入的命令行参数  (dollar 老鼠~)<BR>
+	$$	获得程序 PID<BR>
+	$?	前一个命令的返回码<BR>
+	$!	返回后台进程 ID<BR>
+<BR>
+#!/bin/bash (magic number ) ----&gt; shell环境~<BR>
+<BR>
+<BR>
+<BR>
+#!/bin/bash<BR>
+#	注释：<BR>
+#		测试脚本<BR>
+#		脚本执行过程特殊用法： ./base_00.sh [path] [username]<BR>
+#<BR>
+#		version: xx-xx.x<BR>
+#		time: yyyy-mm-dd<BR>
+#			<BR>
+#		terry tsang<BR>
+#			signmen@netease.com<BR>
+#<BR>
+echo $$<BR>
+<BR>
+<BR>
+PID: --... kill, nice, renice....<BR>
+<BR>
+程序的运行<BR>
+回顾：进程管理<BR>
+	父进程<BR>
+	子进程<BR>
+	fork-and-exec 机制<BR>
+	进程运行的特性<BR>
+<BR>
+<BR>
+变量：<BR>
+	局部变量<BR>
+	全局变量（export aa）--&gt;（注意：变量的全局定义，是相对自己的子进程而言的，而不影响父进程~子进程可以无限多）<BR>
+	shell中变量不区分类型~<BR>
+<BR>
+	清空变量：shell&gt;unset b    或者： shell&gt;b=' '<BR>
+<BR>
+	临时赋值~（之所以叫临时赋值，原因是它不会改变原来变量的值的赋值情况~）<BR>
+	shell&gt;echo ${a:-uuu}	  ///$a已经被赋值了为：123，而 $b为：空~；输出的会是 $a变量的值 123！<BR>
+	shell&gt;echo ${b:-uuu}    ////当前什么时候在会被临时赋值呢？只有当前面的那个变量没有被赋值的时候，才会输出临时的赋值~~uuu<BR>
+	shell&gt;echo $a		///仍然为 123<BR>
+	shell&gt;echo $b		///仍然为空~<BR>
+<BR>
+	shell&gt;echo ${a:+ppp}  ////将原来赋值了的变量，做一个临时输出~当然，它也不会改变原来变量的赋值情况~<BR>
+					 ///如果 变量 a 之前没有被赋值，ppp也不会输出~<BR>
+	<BR>
+	shell&gt;echo ${a:=yyy}    ///会判断，当前的变量 a 是否已经赋值，如果没被赋值的话，它会帮它赋值~如果已经赋值了，就输出原来的值~这个很常用~<BR>
+<BR>
+	<BR>
+	~+ = path -----&gt; echo ~+  &lt;=&gt; pwd &lt;=&gt; echo $PWD<BR>
+	~-  = oldpath     <BR>
+<BR>
+	expr length 可以获取字符长度<BR>
+	expr substr 可以截取字符<BR>
+	expr index 第一次出现的字符位置计算<BR>
+<BR>
+	a='abcdefgh'<BR>
+	a='abcde    fgh'<BR>
+	expr length &quot;$a&quot;  &lt;=&gt; expr length $a    (这种情况下，如果变量a中出现了空格的话，就会报语法错误~)<BR>
+	expr substr $a 2 3  &lt;=&gt; echo ${a:1:3}      ///截取$a中，第二个字符开始，长度为三个字符~<BR>
+输出都为： bcd              				///用右边的方法，字符串的第一个序号为 0,所以要从第二个开始的话，就是 1 了~<BR>
+	expr index $a c      ///变量 $a 第一次出现 c 的地方~也就是 3 了~~~<BR>
+<BR>
+	echo -e              ///&quot;-e&quot;, 这是使用转义字符必须使用的一个参数~<BR>
+ 	<BR>
+<BR>
+###################################################################################################################<BR>
+2012.7.14：语法篇上开始！<BR>
+1，变量的定义<BR>
+定义变量的时候，等号 “=”的左右两边是不能有空格的，不然会报错！<BR>
+要使用变量的话，要给钱，以前就是前面要加 $ 符号~<BR>
+bash是一堆命令的组合，给我们提供命令行的方式，一种应用程序~<BR>
+局部变量的赋值，不能传给子bash进程~杀死子bash，又返回到父进程中，之前的变量值不会丢失~<BR>
+我们需要全局变量的定义，当我们产生一个子进程的同时，子进程能继承父进程的变量~<BR>
+	全局变量 ： shell&gt;export 变量名称        ///变量名称前面是不需要加 $符号的，不需要给钱~<BR>
+	在定义变量的同时，就进行全局定义，那也是允许的：shell&gt;export  abc='123'<BR>
+	这样之后，父进程的变量定义，能够传递到子进程中！<BR>
+继承关系只能是父亲传递给儿子~<BR>
+	儿子的进程是无法在自杀唤醒父进程的过程中，将自己设置的全局变量送给父进程的~只有在父进程新增加一个子进程的过程中发生这种数据的传递~<BR>
+2，shell中的变量不区分类型<BR>
+3，脚本优势<BR>
+	脚本的执行过程，是从左至右，从上到下去执行的！<BR>
+	结构要清晰，适当的注释，方便了脚本的二次开发，和使用~<BR>
+	一个脚本应该无错运行。<BR>
+	它应该能完成它要完成的任务。<BR>
+	程序的逻辑结构定义清晰而且明显。<BR>
+	一个脚本不做不必要的工作。<BR>
+	脚本可以重用。<BR>
+4.<BR>
+清空变量的值， <BR>
+	shell&gt;unset  变量名 <BR>
+也可以：shell&gt;b=' '<BR>
+<BR>
+数学运算：<BR>
+==============方法一<BR>
+a=8<BR>
+b=2<BR>
+echo $[ $a + $b ]   ////要用方括号，在括号的前和后，加号的左右也建议由空格~~<BR>
+echo $[ $a - $b ] 	///减<BR>
+echo $[ $a * $b ] 	///乘<BR>
+echo $[ $a / $b ] 	///除<BR>
+echo $[ $a % $b ] 	///取余<BR>
+echo $[ $a ** $b ] 	///乘法，后面的是次方~<BR>
+==============方法二<BR>
+expr  $a + $b           ///四则运算符号的左右两边一定要加上空格~，不加空格，就会将整个作为字符串输出~<BR>
+expr  $a - $b  <BR>
+expr  $a \* $b  		///使用乘号的时候，必须使用转移符号，否则使用的时候会报错~<BR>
+expr  $a + $b  <BR>
+expr  $a + $b  <BR>
+expr  $a + $b  <BR>
+注意：expr是不允许上面的那样做平方的~<BR>
+将a+b的值赋值给　ｃ　<BR>
+c=` expr $a + $b `              ///expr $a + $b 的两边加的事执行号~~~等号两边同样不能有空格，而+号两边必须有空格~<BR>
+==============方法三<BR>
+let $a + $b           ///这种方法只能在程序中进行计算，+号两边可以不带空格~而不会输出~一般拿来赋值！<BR>
+let d=$a+$b<BR>
+echo '$d value is:' $d<BR>
+<BR>
+######################################转移字符#######################################################<BR>
+转移字符实际上就是 echo 加上小参数 -e ，然后加上一堆参数，实现了一种进行定义输出的效果~<BR>
+<BR>
+<BR>
+-e  是使用转义字符必须要使用的参数~~<BR>
+\n  -------&gt;代表换行！写 shell的过程中，强烈建议写 \n ,用 \t 可能会遇到一些奇怪的问题~~<BR>
+\t   -------&gt;制表符<BR>
+\r  --------&gt;跟 \n差不多，有一个区别，当在linux中的文本编辑器中，如果你敲了换行符时，系统实际上给你加了 \n, 而在 windows中，敲了换行时，加上的是 \r\n!<BR>
+		这是 linux 和 windows 的区别~~~<BR>
+<BR>
+shell&gt;echo &quot;123  abc  456  abc&quot;<BR>
+shell&gt;echo -e &quot;123\t abc \n 456 \t abc&quot;<BR>
+123	abc<BR>
+456	abc<BR>
+shell&gt;echo -en &quot;123\t abc \n 456 \t abc&quot;	///加上了 一个 n 之后，会取消字符串中自动加上的那个 \n……<BR>
+…………………………………………………………………………………………………………<BR>
+shell&gt;echo &quot; abc &quot;<BR>
+ abc <BR>
+shell&gt;a= &quot; abc &quot;<BR>
+shell&gt;echo $a		///前后空格没有了~<BR>
+abc<BR>
+shell&gt;expr  length $a	///默认没有计算前后空格~<BR>
+3<BR>
+shell&gt;IFS=''			//变量值等于空~也就是没有了默认的分隔符了~这样能保证空格能输出~这是系统中默认的一种环境~小心~~<BR>
+shell&gt;expr length $a	///这样之后，它把前端空格和后端空格都计算在内了~<BR>
+5<BR>
+-----------&gt;IFS是系统中的一个默认的环境变量~=默认的分隔符 = ' ' (空格), 而当前系统中在计算的时候，分隔符是默认被取消掉的~<BR>
+shell&gt;IFS=' '        ///执行完了之后，建议又将 IFS设置为空格~<BR>
+…………………………………………………………………………………………………………<BR>
+单引号和双引号都能适应于我们的转义字符~~~<BR>
+<BR>
+####################################数组#############################################<BR>
+语法篇2！ 9分40秒~<BR>
+<BR>
+<BR>
+数组：<BR>
+number=(1 2 3 4 5)<BR>
+括号的左边和右边都不允许有空格，而里面的内容默认以空格作为分隔符！<BR>
+<BR>
+a=(q w e r t y)<BR>
+echo ${a[0]} ----&gt;q          ///小标只能用数字！而rhel6可以有关联数组。<BR>
+echo ${a[*]}<BR>
+shell--&gt;不支持 二维 || 多维数组<BR>
+数组可以被重复地赋值！<BR>
+a[3]=new<BR>
+echo ${a[*]}<BR>
+q w e new t y <BR>
+<BR>
+b=(q w [4]=6 t y u)<BR>
+---&gt;当前第一个没有被下标注，肯定是以0开始！q-&gt;0 w-&gt;1 6-&gt;4 t-&gt;5 y-&gt;6 u-&gt;7 <BR>
+				而 2， 3 默认下标的为空！<BR>
+				当然，可以再赋值！<BR>
+----------------------------------------------------------------------------<BR>
+shell&gt;route -n | grep UG<BR>
+shell&gt;new=( `route -n | grep UG` )   <BR>
+shell&gt;echo ${new[1]}           ////这样可以很便捷地将网关号输出！<BR>
+<BR>
+===================================================<BR>
+read: 从外部将变量读入脚本中！<BR>
+--------------------------------------------------------------<BR>
+#!/bin/bash<BR>
+#<BR>
+# read 语法<BR>
+#<BR>
+echo -e  &quot;are you over 18 years old?[Y/N] &quot;<BR>
+read years 		///read -s years --&gt;shadow!这样的话，就会隐藏用户地输入！<BR>
+echo &quot;===============&quot;<BR>
+echo &quot; Your answer is: &quot; $years<BR>
+--------------------------------------------------------------<BR>
+<BR>
+让用户地录入，能不进行换行！<BR>
+echo -ne &quot;are you over 18 years old?&quot; <BR>
+--------------------version 1--------------------------<BR>
+#!/bin/bash<BR>
+#<BR>
+# read 语法<BR>
+#<BR>
+echo -e  &quot;are you over 18 years old?[Y/N] &quot;<BR>
+read -s years 		///read -s years --&gt;shadow!这样的话，就会隐藏用户地输入！<BR>
+echo &quot;===============&quot;<BR>
+echo &quot; Your answer is: &quot; $years<BR>
+-------------------------version 2---------------------------<BR>
+#!/bin/bash<BR>
+#<BR>
+# read 语法<BR>
+#<BR>
+echo -ne  &quot;are you over 18 years old?[Y/N] &quot;<BR>
+read -s years 		///read -s years --&gt;shadow!这样的话，就会隐藏用户地输入！<BR>
+echo -e &quot;\n&quot;			///echo 自定义一个换行符！<BR>
+echo &quot;===============&quot;<BR>
+echo &quot; Your answer is: &quot; $years<BR>
+-------------------------------------------------------------------------------------------------<BR>
+<BR>
+#!/bin/bash<BR>
+#<BR>
+# Just for test for &quot;read&quot;<BR>
+#<BR>
+echo -n &quot;你希望软件位置的位置 [PATH]: &quot;<BR>
+read soft_path<BR>
+echo <BR>
+echo -n &quot;软件当前使用的 UID [uid_number]: &quot;<BR>
+read soft_uid<BR>
+echo<BR>
+echo  -n &quot;软件当前使用权限 000~777: &quot;<BR>
+read soft_prem<BR>
+echo<BR>
+<BR>
+echo &quot;==================&quot;<BR>
+echo &quot;软件位置为：&quot; $soft_path<BR>
+echo &quot;软件 uid 为：&quot; $soft_uid<BR>
+echo &quot;软件权限为：&quot; $soft_prem<BR>
+<BR>
+=========================================================<BR>
+<b>判断！<BR>
+	条件判断语法<BR>
+</b><BR>
+数字判断方法			字符判断方法<BR>
+-eq					==<BR>
+-ne					!=<BR>
+-lt					&lt;<BR>
+-le					&lt;=<BR>
+-gt					&gt;<BR>
+-ge					&gt;=<BR>
+			<BR>
+-z 变量为 null<BR>
+<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+(man test 可以知道！)<BR>
+gt----&gt;greater than!<BR>
+ge---&gt;greater than or equal to<BR>
+le ---&gt;less than or equal to<BR>
+lt  ---&gt;less than<BR>
+ne---&gt; not equal to		<BR>
+eq---&gt;equal to<BR>
+&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<BR>
+<BR>
+-------------------------------------------------<BR>
+#!/bin/bash<BR>
+#<BR>
+#判断使用<BR>
+#<BR>
+a=3<BR>
+a=6<BR>
+<BR>
+if [ $a -gt $b ]<BR>
+then <BR>
+	echo &quot;$a is bigger&quot;<BR>
+else<BR>
+	echo &quot;$a is smaller&quot;<BR>
+fi<BR>
+-------------------------------------------------------------<BR>
+#!/bin/bash<BR>
+#<BR>
+#字符判断使用，要么完全匹配，要么不完全匹配<BR>
+#<BR>
+a=' /root '<BR>
+<BR>
+if [  &quot;$a&quot; == &quot;$HOME&quot;  ]<BR>
+then <BR>
+	echo &quot;character match&quot;<BR>
+else<BR>
+	echo &quot;character does not match&quot;<BR>
+fi<BR>
+-----------------------------------------------------------------<BR>
+#!/bin/bash<BR>
+#<BR>
+#判断的嵌套使用<BR>
+#<BR>
+a=3<BR>
+b=12<BR>
+c=23<BR>
+<BR>
+if [ $a -gt $b ]<BR>
+then <BR>
+	if [ $a -gt $c ]<BR>
+	then<BR>
+		echo &quot;$a 是最大的数字&quot;<BR>
+	else<BR>
+		echo &quot;$a 不是最大的数字&quot;<BR>
+	fi<BR>
+else<BR>
+	if [ $a -lt $c ]<BR>
+	then<BR>
+		echo  &quot;$a 是最小的数字&quot;<BR>
+	else<BR>
+		echo  &quot;$a 不是最小的数字&quot;<BR>
+	fi<BR>
+fi<BR>
+--------------------------version 2--------------------<BR>
+#!/bin/bash<BR>
+#<BR>
+#判断的嵌套使用<BR>
+#<BR>
+a=3<BR>
+b=12<BR>
+c=23<BR>
+<BR>
+if [ $a -gt $b ]<BR>
+then <BR>
+	if [ $a -gt $c ]<BR>
+	then<BR>
+		echo &quot;$a 是最大的数字&quot;<BR>
+	else<BR>
+		echo &quot;$a 不是最大的数字&quot;<BR>
+	fi<BR>
+elif [ $a -lt $c ]<BR>
+	then<BR>
+		echo  &quot;$a 是最小的数字&quot;<BR>
+	else<BR>
+		echo  &quot;$a 不是最小的数字&quot;<BR>
+	fi<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+特殊的用法<BR>
+#!/bin/bash<BR>
+a=4		///赋值过程中，等号的左右不允许有空格！<BR>
+b=3<BR>
+<BR>
+if [ $a -gt $b ]		///判断中 方括号的左右，必须要有空格！判断符左右，建议有空格！<BR>
+then<BR>
+	 : ;              ///: 空命令，不写的话，会报错！<BR>
+else<BR>
+	echo &quot;Bingo&quot;<BR>
+fi<BR>
+==========================================<BR>
+<b>文件判断</b><BR>
+<BR>
+-e 文件存在			-f  文件(不去判断这个文件是普通文件还是特殊文件，只要判断存在与否！)<BR>
+-s  文件字节不为0		-d 目录<BR>
+			<BR>
+-r 读权限			    	-b 块设备<BR>
+-w 写权限				-c 字符设备<BR>
+-x 执行权限			-p 管道<BR>
+					-L 符号链接<BR>
+-g  setGID				-S  socket<BR>
+-u  setUID				f1 -nt f2  (f1 文件新)<BR>
+-k  sticty bit			f1 -ot f2  (f1 文件老)<BR>
+					f1 -ef f2  (两个文件　inode 相同)<BR>
+-O owner<BR>
+-G groupID<BR>
+-N 是否被修改<BR>
+<BR>
+-------------------------------------------------<BR>
+shell&gt;ls -l /tmp/test/newfile<BR>
+---&gt;希望有一个脚本，确保这个文件时存在的！<BR>
+===================<BR>
+#!/bin/bash<BR>
+file=' /tmp/test/newfile'<BR>
+<BR>
+if [ -f $file ]<BR>
+then <BR>
+	echo &quot;exists&quot;<BR>
+else	<BR>
+#	echo &quot;not exists&quot;<BR>
+	touch  $file<BR>
+fi<BR>
+<BR>
+echo &quot;-------------------------------------&quot;<BR>
+#判断当前文件是否为空<BR>
+<BR>
+if [ ! -s $file ]<BR>
+then<BR>
+	echo &quot;file size 0&quot;<BR>
+else<BR>
+	echo &quot;file size not 0&quot;<BR>
+fi<BR>
+===============================<BR>
+<BR>
+test 文件判断<BR>
+<BR>
+-d 目录<BR>
+-F 文件<BR>
+-s 非空文件<BR>
+其他的同上！<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+<BR>
+#!/bin/bash<BR>
+file=' /tmp/test/newfile1'<BR>
+<BR>
+test -f $file || touch $file            ///若文件存在，不执行，若不存在，则执行 || 后面的命令！<BR>
+<BR>
+=======================================================================<BR>
+<BR>
+语法篇3<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+
+</DD>
+<DT>Linux_shell(葛老师)--&gt;2012,summer!</DT>
+<!--property:date_created=1342485724-->
+<!--property:date_modified=1342689140-->
+<DD>
+第一周，讲一些语法，循环，函数等<BR>
+第二周，讲一些案例<BR>
+LAMP--&gt;php里面还要装 gb库，一些验证码的图片，需要这个图库去识别<BR>
+函数的创建和使用很重要<BR>
+======================================================================================================================<BR>
+======================================================================================================================<BR>
+shell&gt;uname -r<BR>
+shell&gt;rpm -q bash<BR>
+rhel5.1------&gt;bash-3.2等<BR>
+rhel6.1------&gt;bash-4.1.2<BR>
+<BR>
+写脚本要弄清楚，系统的环境是什么，如平台，bash本身的版本等。<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+注：尝试着安装 rhel6，然后写shell，可以得出它们的区别。<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+1,	什么是shell!<BR>
+shell就是一个命令解释器。<BR>
+用户与系统交互的一个接口。<BR>
+路由器和交换机提供的那个接口，也就是一个平台，一个管理平台，也同shell一样！<BR>
+shell&gt;cat /etc/shells                ///一些shell!上网或查阅书籍，去了解这些shell的差别！<BR>
+/bin/sh<BR>
+/bin/bash<BR>
+/sbin/nologin-------&gt;登录不了，获得不了人机交互的界面<BR>
+/bin/tcsh<BR>
+/bin/csh<BR>
+/bin/ksh<BR>
+/bin/zsh<BR>
+<BR>
+shell&gt;rpm -qf  /bin/bash<BR>
+shell&gt;!!                                 ////上一次所执行的命令，调出来！<BR>
+shell&gt;chsh -l                  ////作用同 cat /etc/shells<BR>
+<BR>
+<BR>
+<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<span style="color:#ff0000">Q1：</span>查找出，有 pstree的那一行，以及它的上下行都显示出来？这个需求怎么实现？<BR>
+课本上P45：<BR>
+shell&gt;<span style="color:#ff0000">pstree  | grep -A 1 -B 1 pstree<BR>
+</span>shell&gt;pstree | grep -B 1 pstree          ////匹配行以及其上面的一行！<span style="color:#ff0000"><BR>
+</span><BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<BR>
+shell&gt;echo $SHLVL                     ///显示bash环境的的当前层次！在字符界面上，gnome-terminal不算一层！<BR>
+普通的shell切换，只是临时更改的！<BR>
+要需要，永久改变，可以去 /etc/passwd 里面  /bin/bash!<BR>
+shell&gt;chsh                    ---&gt;修改shell!<BR>
+shell&gt;usermod -s /bin/bash root            ----&gt;修改shell!<BR>
+<BR>
+一些快捷键：<BR>
+ctrl + p      --------&gt;调出命令历史, 网前面翻! <BR>
+ctrl + n      --------&gt;下翻！<BR>
+ctrl + h      ---------&gt;往左删除shell命令的输入字符串<BR>
+ctrl + u   -----------&gt;删除到开头<BR>
+ctrl  + i   ------- ---&gt;等价于 tab键补齐<BR>
+<BR>
+<BR>
+/etc/profile        ----&gt;修改过这个文件后，怎么让它生效！它就是一个脚本文件！下面的两个命令，可以让其生效！<BR>
+或者注销一下，也会生效！<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+shell&gt;. /etc/profile          ------&gt;注意， 点“.”后面要有空格！<BR>
+shell&gt;source /etc/profile              <BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+<BR>
+shell&gt;echo $HISTSIZE<BR>
+shell&gt;vim  .bash_history              ////用了上面两个命令之后，不会马上修改这个文件! 需要注销之后，才会覆盖这个文件!<BR>
+<BR>
+shell&gt;set                    ///系统的环境变量，以及用户自定义的变量！全部都会显示出来！<BR>
+shell&gt;!1010                   ------&gt;执行 history 中序号为 1010 的命令！<BR>
+shell&gt;!if                      ----&gt;执行当前最近的那一条以  if 开头的命令！<BR>
+shell&gt;!!				-----&gt;执行上一条命令<BR>
+shell&gt;ls !$                    ---&gt;<span style="color:#ff0000">!$</span>  &lt;---表示上一条命令的最后一个参数！<BR>
+<BR>
+#############################################################<BR>
+shell中的一些特殊字符！<BR>
+-----------------------------------------------------------------------<BR>
+shell&gt;a=1000<BR>
+shell&gt;echo &quot;Your salary is $a&quot;<BR>
+shell&gt;echo Your salary is $a<BR>
+shell&gt;echo 'Your salary is $a'<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;---------习惯用双引号-------&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+<BR>
+shell&gt;ifconfig eth0 | grep &quot;inet addr&quot; | tr &quot; &quot; &quot;:&quot; | tr -s &quot;:&quot; | cut -d &quot;:&quot; -f 4<BR>
+tr &quot; &quot; &quot;:&quot;    ----&gt;将 空格替换成冒号;<BR>
+tr -s &quot;:&quot;    ----&gt;将多个一起的冒号压缩成一个;<BR>
+cut -d  &quot;:&quot; -f 4   ----&gt;指定分隔符号为冒号，并且取第四个字段！也就是 IP了！<BR>
+(cut -d: -f4 )<BR>
+<BR>
+&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<BR>
+yum 中的 enable=1 可以不要，默认就是等于 1 的！<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+执行脚本：<BR>
+./test1.sh<BR>
+.  test1.sh            ---&gt;这个脚本要在当前目录下执行，这个脚本不需要可执行权限！<BR>
+		点命令，等价于 source命令，这是一个bash 的内建命令<BR>
+<BR>
+=======================================================================================<BR>
+shell&gt;sed  -i  's/^\s*security = .* /\tsecurity = abc /'  /etc/samba/smb.conf<BR>
+               \s -------&gt;代表空格或者 tab键！<BR>
+		    .*   ------&gt;代表任意的字符。<BR>
+		  -i 表示将替换的结果写回到文件。<BR>
+	<BR>
+shell&gt;sed -i &quot;/\thosts allow/s/^.*$/hosts allow = 127. 192.168.10.0\/16 /'  /etc/samba/smb.conf<BR>
+<BR>
+expect 它就是为了解决系统与用户交互问题的工具！<BR>
+<BR>
+<b><span style="color:#ff0000">=======================================================================================================<BR>
+=======================================================================================================<BR>
+                                          </span> 感想：技术一定要先靠自己的专研和探索！<span style="color:#ff0000"><BR>
+=======================================================================================================<BR>
+=======================================================================================================</span></b><BR>
+<BR>
+<BR>
+<b>expect</b>!!!强！<BR>
+shell&gt;yum install expect*<BR>
+ <BR>
+<span style="color:#ff0000">test.exp</span><BR>
+=======================================================================<BR>
+#!/usr/bin/expect -f<BR>
+#comment<BR>
+<BR>
+set un [ lindex $argv 0 ]<BR>
+set pa [ lindex $argv 1 ]<BR>
+spawn smbpasswd -a $un<BR>
+expect &quot;*password:*&quot;<BR>
+send &quot;$pa\r&quot;<BR>
+expect &quot;*password:*&quot;<BR>
+send &quot;$pa\r&quot;<BR>
+expect eof<BR>
+<BR>
+========================================================================<BR>
+<BR>
+<BR>
+-----------------------------------------------------------<BR>
+单引号是比较强大的转义<BR>
+双引号是相对较弱的转义<BR>
+<BR>
+&quot;  ---&gt;部分引用[双引号, 即&quot;]. &quot;STRING&quot;将会阻止(解释) STRING中大部分特殊的字符. <BR>
+<BR>
+'  -----&gt;  全引用[单引号, 即']. 'STRING'将会阻止STRING中所有特殊字符的解释. 这是一种比使用&quot; 更强烈的形式.<BR>
+<BR>
+<BR>
+<BR>
+$LOGNAME                    ///当前登录的用户名的环境变量<BR>
+<BR>
+shell&gt;echo &quot; aa $LOGNAME `date` &quot;<BR>
+shell&gt;date  +%T		///时分秒<BR>
+14:57:36<BR>
+shell&gt;date  +%F 		///年月日<BR>
+2012-07-17<BR>
+shell&gt;date +%F-%T<BR>
+<BR>
+;-----------&gt;分号，命令分隔符号！<BR>
+&amp;-----------&gt;调到后台运行！<BR>
+shell&gt;jobs                       ////用该命令查看<BR>
+shell&gt;fg       3                 /// 3 是它前面的作业号<BR>
+shel&gt;bg 	3                  ///继续回到后台<BR>
+<BR>
+() ------------&gt;一组命令,<span style="color:#ff0000">放在小括号中的命令，是在</span><span style="color:#a52a2a"><b>子shell</b></span><span style="color:#ff0000">中执行的！</span><BR>
+(cd  /etc/;  ls; date;  cal )<BR>
+<BR>
+{}-------&gt;一组命令，大括号里面的最后一个命令也要<b>加上分号</b>！注意，大括号里面的命令，是在<b>当前shell</b>中执行的！<BR>
+{ cd /etc/; date<b>; </b>}			---&gt;加大括号，可以让程序的结构更清晰！大括号，又叫匿名函数！<BR>
+{<BR>
+	cd /etc/;<BR>
+	ls;<BR>
+}<BR>
+<BR>
+如果将命令放在小括号里面的话，命令的运行结果，会自动成为小括号里面的数组！？<BR>
+<BR>
+shell&gt;touch  a{1,2,3,4,5}           ----&gt;直接创建5个文件<BR>
+shell&gt;echo {1..10}<BR>
+1 2 3 4 5 6 7 8 9 10<BR>
+shell&gt;touch b{1..5}<BR>
+b1, b2 ....<BR>
+<BR>
+------------------------<BR>
+for i in {1..10}<BR>
+do<BR>
+	echo $i;<BR>
+done<BR>
+--------------------------<BR>
+<BR>
+shell&gt;mkdir   -p  chap{1,2,3,4,5}/{html,text}<BR>
+----------&gt;创建多个文件夹，并且，每个文件夹里面都有 html,text!<BR>
+| ---------------&gt;管道<BR>
+<BR>
+shell&gt;cut -d : -f 1 /etc/passwd | sort  <BR>
+shell&gt;cut -d : -f 1 /etc/passwd | sort  -r          ////sort -r 逆序<BR>
+shell&gt;ls -l | mail -s &quot;dir list&quot; tom@gmail.com               ///发封邮件给 tom@gmail.com, 邮件的主题是dir list, 邮件的内容是 ls -l 的执行结果！<BR>
+<BR>
+shell&gt;cat file1 | xargs  rm -f       ////xargs 将 cat file1 的执行结果，作为 rm -f 的参数！<BR>
+<BR>
+shell&gt;ls -d &quot;chap&quot; | xargs rm -rf    ////-d，直接作为目录列出来，而不讲其里面的文件内容列出来！<BR>
+<BR>
+shell&gt;ls | file1                ////屏幕上面没有内容了，重定向了<BR>
+shell&gt;ls | tee file1			////既将ls 的内容打印到屏幕，也将其重定向到 file1文件中<BR>
+<BR>
+shell&gt;echo &quot;abc&quot; | tr &quot;a-z&quot; &quot;A-Z&quot;<BR>
+shell&gt;cat file1 | tr &quot;a-z&quot; &quot;A-Z&quot;                    ///并没有修改file1文件<BR>
+shell&gt;tr &quot;a-z&quot; &quot;A-Z&quot; &lt;file1                      ////直接将file1加在后面，会报错<BR>
+<BR>
+*------------&gt;0或多个<BR>
+?　--------&gt;有其仅有一个<BR>
+[ ]　------&gt; shell&gt;ls file[0-9]       ///这个也要有且有一个<BR>
+^　---&gt;取反 <BR>
+shell&gt;ls file[^0-9] <BR>
+shell&gt;ls file[^a-z]<BR>
+!----------&gt;命令历史里面使用！(命令模式下！)，在一个脚本中，历史机制是被禁用的！<BR>
+$　-------&gt;使用变量的时候要用到<BR>
+#---------&gt;一般是注释！用法还有更多！<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+echo &quot;The # here does not begin a comment.&quot;<BR>
+echo 'The # here does not begin a comment.'<BR>
+echo The #这里开始一个注释<BR>
+<BR>
+echo ${PATH#*:} #参数替换，不是一个注释<BR>
+echo $(( 2#101011 ))    #数制转换，不是一个注释<BR>
+<BR>
+# 感谢  , S.C.<BR>
+<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<BR>
+<BR>
+,           ---&gt;  逗号操作符. 逗号操作符链接了一系列的算术操作. 虽然里边所有的内容都被运行了,但只有最后一项被返回.<BR>
+         let &quot;t2 = ((a = 9, 15 / 3))&quot; # Set &quot;a = 9&quot; and &quot;t2 = 15 / 3&quot;<BR>
+<BR>
+${ }   -------&gt;获取变量的值－－－&gt;区分变量与普通字符<BR>
+$()　　----&gt;命令替换，不用执行号了<BR>
+<BR>
+shell&gt;df -Th | grep &quot;/boot&quot; | awk '{print $6}'<BR>
+awk -----&gt;默认是以空白作为分隔符<BR>
+shell&gt;df -Th | grep &quot;/boot&quot; | awd '{print $6}' | tr -d &quot;%&quot; <BR>
+<BR>
+$(( )) -------&gt;这个是用来进行数学计算的<BR>
+bash  没有字符类型，除非你特殊声明<BR>
+a=10<BR>
+b=20<BR>
+c=$(( $a+$b ))<BR>
+<BR>
+$[]  -------&gt;也是用来进行数学计算的<BR>
+c=$[ $a+$b ]<BR>
+(( ))  -----&gt;推荐的进行数学计算的! <BR>
+((  c=$a+$b  ))<BR>
+((  c=a+b  ))    ------&gt;它的特点，没有用美元符号，也能使用！<BR>
+echo $c<BR>
+<BR>
+$(()), $[], (())---------&gt;都是针对整数的！<BR>
+需要计算浮点数的华，需要 bc!<BR>
+<BR>
+----------------------------<BR>
+i=0<BR>
+while (( i&lt;=10 ))<BR>
+do <BR>
+        echo $i;<BR>
+        let i++;<BR>
+done<BR>
+－－－－－－－－－－－－－－－&gt;关于数值的比较和数值的运算，<i>推荐使用</i>  (( ))  !!<BR>
+<BR>
+for (( i=0; i&lt;=10; i++ ))<BR>
+do<BR>
+        echo $i;<BR>
+done<BR>
+======================================================================<BR>
+<BR>
+[ ]-------------&gt;用来进行比较，<BR>
+<BR>
+man test             ////-gt可以找到！<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+#  &gt; ---gt  <BR>
+#  &lt;= ---le<BR>
+<BR>
+if [ 5 -gt 4 ]<BR>
+then<BR>
+      echo '&gt;';<BR>
+fi<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+if test 5 -gt 4 <BR>
+then <BR>
+       echo &quot;&gt;&quot;;<BR>
+fi<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+var1=&quot;abc&quot;<BR>
+if [ &quot;$var1&quot; == &quot;abc&quot; ]  #假如 var1里面有空格，就需要 &quot;$var1&quot;, 不然比较会失败！<BR>
+then <BR>
+        echo &quot;==&quot;<BR>
+fi<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+var2=&quot;def&quot;<BR>
+if [[ &quot;$var2&quot; == &quot;def&quot; ]]  <BR>
+then <BR>
+        echo &quot;==&quot;<BR>
+fi<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+<BR>
+[[ ]]　--------&gt;字符串的比较，建议用这个！<BR>
+<BR>
+()　---------------&gt;数组！<BR>
+[root@localhost shell_tao]# a=(10 20 30 40)<BR>
+[root@localhost shell_tao]# echo $a<BR>
+10<BR>
+[root@localhost shell_tao]# echo ${a[]}<BR>
+bash: ${a[]}: bad substitution<BR>
+[root@localhost shell_tao]# echo ${a[0]}<BR>
+10<BR>
+[root@localhost shell_tao]# echo ${a[1]}<BR>
+20<BR>
+[root@localhost shell_tao]# echo ${a[*]}<BR>
+10 20 30 40<BR>
+[root@localhost shell_tao]# echo ${a[@]}<BR>
+10 20 30 40<BR>
+[root@localhost shell_tao]# echo ${a[3]}<BR>
+40<BR>
+-----------------------------------------------<BR>
+var1=&quot;abc def&quot;<BR>
+[ $var1 = &quot;abc def&quot; ]    ----------&gt;会报错！<BR>
+[[ $var1 = &quot;abc def&quot; ]]	---&gt;right!<BR>
+[ &quot;$var1&quot; = &quot;abc def&quot; ] 	---&gt;right!<BR>
+[[ &quot;$var1&quot; = &quot;abc def&quot; ]]   	---&gt;right! recommend!<BR>
+<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+var1=(tom jerry mike lee);<BR>
+for i in &quot;${var1[@]}&quot;<BR>
+do<BR>
+        echo $i;<BR>
+done<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+[root@localhost shell_tao]# arr1=`ls`<BR>
+[root@localhost shell_tao]# echo ${arr1[0]}<BR>
+lib.sh samba_server.sh shell_Ge shell_Guide test1.exp test1.sh test2.sh test3.sh test4.sh test5.sh test6.sh<BR>
+[root@localhost shell_tao]# echo ${arr1[1]}<BR>
+<BR>
+[root@localhost shell_tao]# echo ${arr1[2]}<BR>
+<BR>
+[root@localhost shell_tao]# arr1=( `ls` )<BR>
+[root@localhost shell_tao]# echo ${arr1[1]}<BR>
+samba_server.sh<BR>
+[root@localhost shell_tao]# echo ${arr1[2]}<BR>
+shell_Ge<BR>
+[root@localhost shell_tao]# 因为`ls`列出来的内容，是以空白隔开！与()声明数组的格式一样，所以可以 这样使用！<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+<BR>
+&amp;&amp;   －－－－－－－－－&gt;简单的逻辑判断！列表<BR>
+ifdown  eth0  &amp;&amp;  ifup eth0<BR>
+<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+《高级Bash脚本编程指南》扩展（抽取一小部分）：<BR>
+<BR>
+: －－－－－－－－－－&gt; 空命令[冒号, 即:]. 等价于&quot;NOP&quot; ( no op , 一个什么也不干的命令). 也可以被认为与shell的 内建命令true作用相同. &quot; : &quot; 命令是一个bash的内建命令, 它的退出码(exit status)是&quot;true&quot;(0).<BR>
+ ＝＝＝＝＝＝＝＝＝＝ ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+    :<BR>
+    echo $?  #0<BR>
+ ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<BR>
+在一个二元命令中提供一个占位符<BR>
+  : ${username=`whoami`}                        <BR>
+ # ${username=`whoami`}   如果没有开头的&quot;:&quot; 的话, 将会给出一个错误, 除非&quot;username&quot; 是一个命令或者内建命令...<BR>
+<BR>
+在与&gt; 重定向操作符结合使用时, 将会把一个文件清空, 但是并不会修改这个文件的权限. 如果之<BR>
+前这个文件并不存在, 那么就创建这个文件.<BR>
+<BR>
+ ----------------------------------------------------------------------------<BR>
+ : &gt; data.xxx        # 文件&quot;data.xxx&quot; 现在被清空了.<BR>
+ # 与 cat /dev/null &gt;data.xxx 的作用相同<BR>
+ # 然而,这并不会产生一个新的进程, 因为 &quot;:&quot;  是一个内建命令.<BR>
+<span style="color:#ff0000">Q2</span>：这句话，怎么验证？内建命令又作何解释？就是内部命令？<BR>
+内建命令就是内部命令：shell&gt;help; shell&gt;enable !可以看到的一些命令，都是内部命令！<BR>
+内部命令，相当于已经将其放到了内存中，速度会快一些！<BR>
+--------------------------------------------------------------------                         <BR>
+在与&gt;&gt;重定向操作符结合使用时, 将不会对预先存在的目标文件( : &gt;&gt; target_file )产生任何影<BR>
+响. 如果这个文件之前并不存在, 那么就创建它.<BR>
+    这只适用于正规文件, 而不适用于管道, 符号连接, 和某些特殊文件.<BR>
+<span style="color:#0000ff">===================================================================================<BR>
+</span><BR>
+rhel6-----&gt;内存要多于900M，否则没有图像环境！<BR>
+1，索引数组！－－&gt;var1=([0]=tom [1]=123 [2]=20 [3]=15200860264)<BR>
+	(rhel6上的bash4 可以！rhel5不行！)关联数组！－－&gt;var1=([userName]=tome [pwd]=123 ……)<BR>
+	echo $(var1[userName]) ----&gt;方便使用！<BR>
+2，shell&gt;lsls &amp;&gt;file1<BR>
+	shell&gt;lsls &amp;&gt;&gt;file1 (rhel6可以！rhel5不行！)<BR>
+<BR>
+<span style="color:#0000ff">======================================================================<BR>
+</span><BR>
+7.18morning!@@@@@@@@@@@@@@@@@@@@@@@@@<b>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</b>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<BR>
+<BR>
+(())<BR>
+[[]]<BR>
+$() ``<BR>
+$(())  $[]<BR>
+[] &lt;=&gt; test<BR>
+(man test)<BR>
+<BR>
+------------&gt;(( ))  整数的数值的运算于比较<BR>
+------------&gt;[[ ]] 字符串的比较<BR>
+------------&gt;$(( )) 数值运算<BR>
+------------&gt;a=$[ 10 + 50 ]<BR>
+<BR>
+====================================================================================================<BR>
+shell的特性！<BR>
+<BR>
+别名<BR>
+shell&gt;alias abc='ls -l'<BR>
+shell&gt;unalias  abc<BR>
+shell&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+<BR>
+shell&gt;ls -l              ///ls -l 的时间，是文件的修改时间，也就是 modify的时间！<BR>
+shell&gt;ls -lt             ///t --&gt;按它的修改时间来排序！<BR>
+<BR>
+执行命令的过程，即<span style="color:#ff0000">bash的解释过程</span>:<BR>
+－－&gt;1, 看abc是不是一个别名－&gt;2,看abc是不是一个函数－&gt;3, 看abc是否是内部命令－&gt;4, (外部命令)去PATH环境变量中去寻找！<BR>
+($PATH环境变量只针对外部命令！)<BR>
+<BR>
+===================================================================<BR>
+abc--&gt;函数！<BR>
+[root@localhost shell_tao]# abc()<BR>
+&gt; {<BR>
+&gt; date;<BR>
+&gt; }<BR>
+[root@localhost shell_tao]# abc<BR>
+2012年 07月 18日 星期三 08:42:45 CST<BR>
+<BR>
+====================================================================<BR>
+<BR>
+内部命令：<BR>
+外部命令：<BR>
+内－－&gt;不需要启动一个单独的进程来运行它<BR>
+外－－&gt;需要创建(fork) 和执行(exec）一个新的子进程来运行它<BR>
+<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+shell&gt;w               ///当前有多少人登录到系统，包括ssh上来的！<BR>
+<BR>
+shell&gt;w -h      ////会将头部去掉，只剩下登录用户的信息行！<BR>
+-----------------------------<BR>
+查看一个命令的安装包，先用which找到命令的绝对路径，然后 rpm -qf<BR>
+shell&gt;which  fdisk<BR>
+shell&gt;rpm -qf  /sbin/fdisk<BR>
+shell&gt;rpm -qf `which fdisk`<BR>
+----------------------------------------------------<BR>
+删除掉 owner 是 tom 的文件和目录<BR>
+<BR>
+shell&gt;find / -user tom<BR>
+shell&gt;rm -rf $( find / -user tom )<BR>
+--------------------<BR>
+shell&gt;rm -rf $( find /var -user tom )<BR>
+--------------------------------------<BR>
+shell&gt;pkg=$( rpm -qf `which fdisk` )<BR>
+shell&gt;pkg=$( rpm -qf $( which fdisk ) )<BR>
+<BR>
+====================================<BR>
+shell&gt;lsls  &gt; file1 2&gt;&amp;1          ////&amp;1 --&gt;代表 file1<BR>
+shell&gt;lsls &amp;&gt; file1<BR>
+==============================================<BR>
+shell&gt;id  tom          ///如果没有 tom 这个用户，就会报错<BR>
+shell&gt;grep  &quot;tom&quot; /etc/passwd	///这样 tom1 tom2 等都查到了<BR>
+shell&gt;grep &quot;\&lt;tom\&gt;&quot; /etc/passwd	///nice!<BR>
+shell&gt;grep &quot;&lt;tom&gt;&quot; /etc/passwd         ///<BR>
+===================================================<BR>
+test()<BR>
+{<BR>
+        if grep &quot;\&lt;tom\&gt;&quot; /etc/passwd &amp;&gt; /dev/null<BR>
+        then <BR>
+                echo tom exist!<BR>
+        fi<BR>
+}<BR>
+test<BR>
+<BR>
+echo &quot;========================&quot;<BR>
+<BR>
+config=&quot;/etc/passwd&quot;;<BR>
+test1()<BR>
+{<BR>
+        if grep &quot;\&lt;$1\&gt;&quot; $config &amp;&gt; /dev/null<BR>
+        then <BR>
+                echo $1 exist!<BR>
+        fi<BR>
+}<BR>
+test1 tom<BR>
+<BR>
+echo &quot;=====================&quot;<BR>
+cat &gt; file1 &lt;&lt; <span style="color:#ff0000">EOF</span><BR>
+abc<BR>
+def<BR>
+<span style="color:#ff0000">EOF</span>ILE<span style="color:#ff0000"><BR>
+</span>abcde<span style="color:#ff0000"><BR>
+EOF</span><BR>
+##########Notice:上面的情况不会出现问题！只有EOF,单独出现在一行时，才会结束！<BR>
+注意：这个　EOF,　一定要顶行写! tab　都不能有!<BR>
+=====================================================================<BR>
+<BR>
+echo -e  <BR>
+echo -n<BR>
+----------<BR>
+===========================================<BR>
+printf<BR>
+shell&gt;name=&quot;tom&quot;<BR>
+shell&gt;printf 'username is %s \n' $name            ////占位符号　%s 会被第一个变量　$name 替换！<BR>
+<BR>
+-----------------------------------------------------<BR>
+echo  输出<BR>
+<b>输入　<span style="color:#ff0000">read</b></span><BR>
+----------------------------------------------<BR>
+<BR>
+shell&gt;read -p &quot;Please input a number:&quot; $var<BR>
+<BR>
+shell&gt;echo $var<BR>
+<BR>
+<BR>
+[root@localhost shell_tao]# read -p &quot;Please input a number:&quot; $var<BR>
+Please input a number:100<BR>
+[root@localhost shell_tao]# echo $var<BR>
+<BR>
+[root@localhost shell_tao]# read -p &quot;Please input a number:&quot; var<BR>
+Please input a number:100<BR>
+[root@localhost shell_tao]# echo $var<BR>
+100<BR>
+[root@localhost shell_tao]# read -p &quot;Please input three number:&quot; var1 var2 var3<BR>
+Please input three number:100 200 300 400<BR>
+[root@localhost shell_tao]# echo $var1<BR>
+100<BR>
+[root@localhost shell_tao]# echo $var2<BR>
+200<BR>
+[root@localhost shell_tao]# echo $var3<BR>
+300 400<BR>
+[root@localhost shell_tao]# read -<b>s</b>p &quot;Please put your passwd:&quot; pass		//s--&gt;shadow!<BR>
+Please put your passwd:[root@localhost shell_tao]# echo $pass<BR>
+aaa<BR>
+==========================================================================<BR>
+<BR>
+<BR>
+<BR>
+<b><span style="color:#ff0000">变量</span></b>：<BR>
+<BR>
+数据类型，关键的不同是，占内存的大小不一样！！！！！<BR>
+<BR>
+------------------------------------------------<BR>
+(( )) ---&gt;当整数数值在处理！<BR>
+<BR>
+要当一个变量作为整数处理的话，是不要提供可靠的上下文的！<BR>
+<BR>
+&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;<BR>
+&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;<BR>
+大括号扩展.<BR>
+shell&gt;cat {file1,file2,file3} &gt; combined_file<BR>
+      # 把file1, file2, file3 连接在一起, 并且重定向到combined_file 中.<BR>
+	<span style="color:#ff0000">在大括号中, 不允许有空白, 除非这个空白被引用或转义</span><BR>
+ shell&gt;cp file22.{txt,backup}<BR>
+   # 拷贝&quot;file22.txt&quot; 到&quot;file22.backup&quot; 中<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+shell&gt; echo {file1,file2}\ :{\ A,&quot; B&quot;,' c'}<BR>
+file1 : A file1 : B file1 : c file2 : A file2 : B file2 : c<BR>
+----------------------------------------------<BR>
+( )  在小括号中的命令列表，将会作为一个子shell来运行。<BR>
+	在扩号中的变量，由于是在子shell中，所以对于脚本剩下的部分是不可用的.<BR>
+	父进程, 也就是脚本本身, 将不能够读取在子进程中创建的变量, 也就是在子shell中创建的变量.<BR>
+{ }<BR>
+	代码块[大括号, 即{}]. 又被称为内部组, 这个结构事实上创建了一个匿名函数(一个没有名字的函数). <BR>
+	然而, 与&quot;标准&quot;函数不同的是, 在其中声明的变量,对于脚本其他部分的代码来说还是可见的.<BR>
+<BR>
+{} \;<BR>
+      　路径名. 一般都在find命令中使用. 这不是一个shell内建命令.<BR>
+         “;”用来结束find命令序列的-exec 选项. 它需要被保护以防止被shell所解释.<BR>
+Q3<span style="color:#ff0000">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Q3</span><BR>
+&lt;&lt;<BR>
+    用在<span style="color:#ff0000">here document</span>中的重定向.<BR>
+&lt;&lt;&lt;<BR>
+    用在<span style="color:#ff0000">here string</span>中的重定向<BR>
+Q3<span style="color:#ff0000">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Q3</span><BR>
+<BR>
+<b>管道</b>是进程间通讯的一个典型办法, 将一个进程的stdout放到另一个进程的stdin 中. 标<BR>
+准的方法是将一个一般命令的输出, 比如cat或者echo, 传递到一个 &quot;过滤命令&quot;(在这个<BR>
+过滤命令中将处理输入)中, 然后得到结果.<BR>
+<BR>
+现在让我们输送ls -l的输出到一个脚本中.<BR>
+shell&gt;ls -l | ./uppercase.sh<BR>
+-RW-RW-R--    1 BOZO BOZO    109 APR 7 19:49 1.TXT<BR>
+-RW-RW-R--    1 BOZO BOZO    109 APR 14 16:48 2.TXT<BR>
+-RW-R--R--    1 BOZO BOZO    725 APR 20 20:56 DATA-FILE<BR>
+<BR>
+<BR>
+<BR>
+&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;<BR>
+&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;<BR>
+<BR>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+/etc/sysconfig/dhcpd<BR>
+DHCPDARGS=&quot;ech0&quot;<BR>
+(eth0)------------&gt;默认是在所有网络接口上侦听dhcp服务，<BR>
+shell&gt;sed  -i 's/^DHCP.*/DHCPDARGS=&quot;eth0&quot;/'  /etc/sysconfig/dhcpd<BR>
+-----&gt;直接替换整行！<BR>
+shell&gt;sed -i '/DHCP/s/=.*/=&quot;eth0&quot;/'  /etc/sysconfig/dhcpd<BR>
+-----&gt;先找到这一行，然后只替换少部分内容！<BR>
+<BR>
+<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+<b>变量分类：</b><BR>
+<BR>
+<b>本地变量</b>　（用户自定义变量）<BR>
+<BR>
+变量可以赋值给变量！ (只要给它提供合理的上下文即可～如这儿的分号便是！)<BR>
+[root@localhost shell_tao]# var1=&quot;abc&quot;<BR>
+[root@localhost shell_tao]# var2=100<BR>
+[root@localhost shell_tao]# var3=&quot;$var1 $var2&quot;<BR>
+[root@localhost shell_tao]# echo $var3<BR>
+abc 100<BR>
+－－－－－－－－－－－－－－－－－－－&gt;<BR>
+<BR>
+当你的值里面有单引号，或者有空格时，变量的赋值都不能成功！推荐使用双引号括起来！<BR>
+<BR>
+<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<b>临时变量：<BR>
+</b><BR>
+shell&gt;a=10<BR>
+shell&gt;b=20<BR>
+shell&gt;echo ${a:+$b}<BR>
+20<BR>
+shell&gt;echo ${c:+$b}<BR>
+			///空<BR>
+shell&gt;unset b<BR>
+shell&gt;echo ${a:+$b}<BR>
+			///空<BR>
+＝＝&gt;a 和 b 的值要同时都要存在，那么　echo ${a:+$b}　才会打印b的值！否则，都会打印出空！<BR>
+====-------------------------------------------------------------------------<BR>
+shell&gt;echo ${a:-$b}<BR>
+==&gt;如果　a 和b 都不存在，那么打印为空；如果　a 存在，则打印出a的值;如果　a 不存在，则打印出b 的值！<BR>
+====--------------------------------------------------------------------------<BR>
+shell&gt;echo ${a:?$b}<BR>
+==&gt;如果　a 的变量不存在，则会有错误的提示信息！&quot; bash: a : 20 &quot;  ---&gt;20是变量b 的值！<BR>
+==&gt;如果存在，则打印　a 的值。<BR>
+====----------------------------------------------------------------------------<BR>
+shell&gt;echo ${a:=$b}<BR>
+==&gt;如果　a 的值存在，则打印出　a 的值！<BR>
+==&gt;如果　a 的值不存在，那么会打印出　b 的值，同时b赋值给a !!<BR>
+===========================================================================================<BR>
+shell&gt;ldd  /bin/ls<BR>
+-------&gt;查看外部命令　ls 使用的时候，需要哪一些库文件！！<BR>
+<BR>
+morning@@@@@@@@@@@@@@@@@@@@@@@@@<b>@@@@@@@@@@@@@@@@@@@@@@@@@@@@</b>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<BR>
+<BR>
+echo ${var1:=$var2}<BR>
+....<BR>
+=================================================<BR>
+shell&gt;var=&quot;abcdefghij&quot;<BR>
+shell&gt;echo ${#var}      ///得到字符串 var 的长度!<BR>
+10<BR>
+---------------------&gt;<BR>
+===:::字符截取！<BR>
+[root@localhost ~]# var=&quot;abcdefgh&quot;<BR>
+[root@localhost ~]# echo ${#var}<BR>
+8<BR>
+[root@localhost ~]# echo ${var:3:2}<BR>
+de<BR>
+[root@localhost ~]# echo ${var:4:2}<BR>
+ef<BR>
+[root@localhost ~]# echo ${var:3}<BR>
+defgh<BR>
+<BR>
+&gt;&gt;：expr substr $a 2 3  &lt;=&gt; echo ${a:1:3}<BR>
+&gt;&gt;：expr length $a &lt;=&gt; echo ${#a}<BR>
+&gt;&gt;：expr length $a 2  200 &lt;=&gt; echo ${var:3}      ///后者强大些！<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<BR>
+shell&gt;declare -i e=10+20+30             ////声明e为整数! <BR>
+shell&gt;echo $e<BR>
+60<BR>
+shell&gt;declare -i  f	////<BR>
+shell&gt;f=20+30<BR>
+shell&gt;echo $f<BR>
+<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+设置只读变量！<BR>
+－－－－－－－－－－－－－－－－－－－－－&gt;法一<BR>
+[root@localhost ~]# var1=&quot;abc&quot;<BR>
+[root@localhost ~]# var1=123<BR>
+[root@localhost ~]# echo var1<BR>
+var1<BR>
+[root@localhost ~]# <span style="color:#ff0000">readonly</span> var1<BR>
+[root@localhost ~]# var1=345<BR>
+bash: var1: readonly variable<BR>
+<BR>
+－－－－－－－－－－－－－－－－－－－－－法二<BR>
+[root@localhost shell_tao]# declare <span style="color:#ff0000">-r</span> var2=100<BR>
+[root@localhost shell_tao]# echo $var2<BR>
+100<BR>
+[root@localhost shell_tao]# var2=&quot;abc&quot;<BR>
+bash: var2: readonly variable<BR>
+<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+shell&gt;set<BR>
+－－&gt;可以看到用户自定义的本地变量，还可以看到系统 自己维护的环境变量!<BR>
+<BR>
+<BR>
+清空变量：shell&gt;unset b    或者： shell&gt;b=' '<BR>
+（<span style="color:#ff0000">清空不了只读变量！</span>－－－&gt;有这样的需求怎么办？没关系，一般只在脚本中设置，注销之后没事了！实验！！？？）<BR>
+<BR>
+--------------------------&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+本地变量，在子进程中是获取不了的！<BR>
+而环境变量，子进程中可以获取它的值！<BR>
+shell&gt;export  var             ///将变量 var 全局定义!<BR>
+&gt;&gt;: declare -x  var_name &lt;=&gt; export  var_name !!!<BR>
+-------------------------&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<BR>
+<BR>
+shell&gt;export	///直接输入这条命令，可以查看出所有的环境变量!<BR>
+shell&gt;env     <BR>
+shell&gt;printenv<BR>
+<BR>
+========================================================================<BR>
+几个典型的环境变量！<BR>
+<BR>
+$PATH<BR>
+$HOSTNAME<BR>
+$HOME<BR>
+$UID<BR>
+$LOGNAME<BR>
+$PWD<BR>
+<BR>
+－－&gt;针对<BR>
+<BR>
+==&gt;PS1=&quot;\e[1;31m[\u@\h \W]\$&lt;\t&gt;&gt;&quot;<BR>
+\u ---&gt;user<BR>
+\h ---&gt;hostname<BR>
+\W---&gt;<BR>
+\t---&gt;time<BR>
+<BR>
+==&gt;PS1='\e[1;31m[\u@\h \W]\$'<BR>
+=================================================================<BR>
+位置参数变量：<BR>
+$1 ,$2 ...$9 , ${10},${11}<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;.<BR>
+------------------&gt;while + shift! 方法1！循环获取位置参数！<BR>
+while (( $# &gt; 0 ))<BR>
+do<BR>
+        echo $1;<BR>
+        shift;<BR>
+done<BR>
+-----------------&gt;for 循环!方法二<BR>
+#&quot;$@&quot; －nice---&gt;代表就是参数列表!<BR>
+for i in &quot;$@&quot;<BR>
+do<BR>
+        echo $i;<BR>
+done<BR>
+------------------&gt;!i 间接引用! 方法三<BR>
+i=1;<BR>
+while (( i &lt;= $# ))<BR>
+do<BR>
+        echo ${!i}; # 间接引用! 直接 $1 这样处理会出问题，不加 ! ，输出的就是数字！？？因为外面的参数是i 的值，而我们需要使用i,需要 ! 间接引用!<BR>
+        let i++;<BR>
+        # (( i++ ))  有人说，(( )) 的运算速度快一些！<BR>
+done<BR>
+&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+$#<BR>
+$?<BR>
+$@<BR>
+$$ <BR>
+---&gt;<span style="color:#ff0000">当前shell的进程号</span>!<BR>
+===&gt;怎么显示当前脚本进程的进程号！！？？？？？？？bash 本身是一个脚本？？？与fork()函数一起实验一下!!<BR>
+是当前shell的进程号!怎么解释，如下!<BR>
+<span style="color:#0000ff">＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊</span><BR>
+shell:<BR>
+---&gt;用点命令，内建命令，会发现，在脚本中执行　:echo $$!<BR>
+	与在外面执行: echo $$ 的值是一样的!<BR>
+---------------------------<BR>
+fork:　叉子！！！！再上网查！<BR>
+<span style="color:#0000ff">＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊</span><BR>
+问题：<BR>
+外部设置的只读变量，会影响脚本的运行！！！如果脚本中对外部设置的readonly 变量又重新赋值，用点命令执行的话，会报错 !<BR>
+（因为点命令是 内建命令，不会新建一个子shell！故外部的变量会影响～）<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<BR>
+$*<BR>
+<BR>
+-----------------------------------------------&gt;<BR>
+$@    与 $*  的差别！在于 双引号!--&gt;推荐使用 $@!<BR>
+$*加上了双引号之后，参数列表将会作为一个打印出来，而空格不起作用了! <BR>
+==============================================================<BR>
+shell&gt;array=(10 20 30 40)<BR>
+shell&gt;echo ${array[*]}	///???<BR>
+shell&gt;echo ${array[@]}            ////推荐使用这个!<BR>
+ <BR>
+========================================<BR>
+$? ----&gt;返回值  [0, 255]<BR>
+&lt;-&gt;exit 0~255<BR>
+&lt;-&gt;return 0~255 			///加入大于 255 ！返回的值，是对255 取整! <BR>
+<BR>
+$?---&gt;主要是用来进行判断！<BR>
+========================================<BR>
+<BR>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+<BR>
+[root@localhost shell_tao]#a=$( expr 10 \* 10 /20 )<BR>
+expr: 语法错误<BR>
+[root@localhost shell_tao]#a=$( expr 10 \* 10 / 20 )<BR>
+[root@localhost shell_tao]#echo a<BR>
+a<BR>
+[root@localhost shell_tao]#echo $A<BR>
+<BR>
+[root@localhost shell_tao]#echo $a<BR>
+5<BR>
+[root@localhost shell_tao]#b=$[ 10 * 10 / 20 ]<BR>
+[root@localhost shell_tao]#echo $b<BR>
+5<BR>
+[root@localhost shell_tao]#c=$(( 10 * 10 /20 ))<BR>
+[root@localhost shell_tao]#echo $c<BR>
+5<BR>
+[root@localhost shell_tao]#(( d=10 * 10 /20 ))<BR>
+[root@localhost shell_tao]#echo $d<BR>
+5<BR>
+shell&gt;let a=5+10<BR>
+shell&gt;echo $a<BR>
+15<BR>
+shell&gt;b=40<BR>
+shell&gt;let a1=$b+10 a2=$b-10 .....<BR>
+<BR>
+<BR>
+shell&gt;a=$[ 3**2 ]           ///次方，幂运算<BR>
+shell&gt;a=$[ 3**(1+1+1) ]     ///<BR>
+<BR>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+expr<BR>
+declare -i<BR>
+$(( ))<BR>
+$[ ]<BR>
+(( ))<BR>
+let <BR>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+<BR>
+######################################################################################################<BR>
+浮点数的运算!<BR>
+shell&gt;(( a=10.1+10.2 ))<BR>
+shell&gt;expr 10.1 + 10.2             <BR>
+……上面的六中方法，都会报错!<BR>
+--------------&gt;用　bc !<BR>
+shell&gt;bc		///进入交互式的方式进行计算！<BR>
+shell&gt;echo &quot;3.14*2&quot; | bc<BR>
+6.28<BR>
+shell&gt;echo &quot;scale=3;10/3&quot; | bc<BR>
+3.333<BR>
+shell&gt;echo &quot;scale=4;10/3&quot; | bc<BR>
+3.3333<BR>
+<BR>
+###################################################################################################<BR>
+<BR>
+<BR>
+<BR>
+rpm -e ntp -noteps ????<BR>
+<BR>
+shell&gt;date +%Z     ///时区!<BR>
+CST<BR>
+==================================修改时区!=================================<BR>
+1) shell&gt;cat /etc/sysconfig/clock<BR>
+2) shell&gt;cp /uar/share/zoneinfo/Asia/Shanghai  /etc/localtime<BR>
+===========================================================================<BR>
+shell&gt;<BR>
+<BR>
+一级服务器!<BR>
+二级服务器： /etc/ntp/step-tickers        (指向上一级的服务器ＩＰ)<BR>
+客户端：也需要 ntp　的软件包,　也要修改时区!<BR>
+<BR>
+shell&gt;crontab<BR>
+shell&gt;crontab -l<BR>
+shell&gt;cat /var/spool/cron/root           ////<BR>
+<BR>
+<BR>
+============================================================================<BR>
+Ｑ:如何显示cp 命令的进度!  <BR>
+类似　rpm 的选项　v -&gt;verbose!<BR>
+--&gt;也可以按 cp -v ! 不过没有那种动态的效果！<BR>
+============================================================================<BR>
+虚拟机中 F9 可以快捷弹出左侧的索引! <BR>
+============================================================================<BR>
+<BR>
+2012.7.19@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<BR>
+<BR>
+<b>数组：</b><BR>
+目前的bash只支持一维数组! <BR>
+shell&gt;arr1=(tom jerry mike     lee)<BR>
+shell&gt;echo ${arr1[3]}<BR>
+lee<BR>
+shell&gt;arr1[4]=&quot;lee2&quot;<BR>
+shell&gt;echo ${arr1[4]}<BR>
+shell&gt;unset arr1[1]<BR>
+shell&gt;echo ${arr1[0]}<BR>
+tom<BR>
+shell&gt;echo ${arr1[1]}<BR>
+<BR>
+shell&gt;echo ${arr1[2]}<BR>
+mike<BR>
+---------------------------------<BR>
+shell&gt;arr2[0]=a<BR>
+shell&gt;arr2[1]=b<BR>
+---------------------------------<BR>
+&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;通过循环来生成一个数组! <BR>
+for i in tom pwd_123 20 10000 15200860264<BR>
+do<BR>
+        r1[x++]=$i;<BR>
+        # x初始值为0!<BR>
+        #  r1[x]=$i; or r1[$x]=$i;<BR>
+        #+ let x++;<BR>
+        # Notice:x不能替换成 i 的值是tom, pwd_123……<BR>
+done<BR>
+<BR>
+echo ${r1[@]}<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+for i in tome aaa bbb ccc<BR>
+do<BR>
+        r1[x++]=$i;<BR>
+        echo ${r1[--x]}<BR>
+        echo $x<BR>
+        echo -------------<BR>
+done<BR>
+<BR>
+for i in tome aaa bbb ccc<BR>
+do<BR>
+        r1[x]=$i;<BR>
+        echo ============<BR>
+        echo ${r1[x]}<BR>
+        let x++;<BR>
+        echo &quot;x=&quot; $x;<BR>
+        echo -------------<BR>
+done<BR>
+echo +++++++++++++++++++++++++++++<BR>
+for i in tome aaa bbb ccc<BR>
+do<BR>
+        r1[x++]=$i;<BR>
+        echo ${r1[ (( x-1 )) ]}<BR>
+        echo $x<BR>
+        echo -------------<BR>
+done<BR>
+注意观察 x 的值！<BR>
+<BR>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+<BR>
+shell&gt;route -n | grep -i &quot;ug&quot; | awk '{print $2}'<BR>
+shell&gt;arr1=( `route -n | grep -i &quot;ug&quot;` )               ////快速生成数组，小括号中是类似<BR>
+shell&gt;echo ${arr1[1]}         ///这样就获得网关了! <BR>
+<BR>
+shell&gt;var1=&quot;aa bb cc&quot;<BR>
+shell&gt;var2=$var1<BR>
+shell&gt;echo $var2<BR>
+shell&gt;var2=( $var1 )			///数组变量<BR>
+shell&gt;echo ${var2[@]}<BR>
+aa bb cc<BR>
+shell&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;<BR>
+<BR>
+shell&gt;arr1=(tom jerry mike lee)<BR>
+shell&gt;arr1=([0]=tom [1]=jerry [2]=mike [3]=lee)<BR>
+注意 rhel6 里面的关联数组！ <BR>
+<BR>
+shell&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<BR>
+shell&gt;echo ${#arr1[@]}        ///打印数组的元素个数!  空也打印的么？？<BR>
+<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+arr1=(tom jerry mike lee)<BR>
+i=0;<BR>
+while (( i &lt; ${#arr1[@]} ))<BR>
+do <BR>
+        echo ${arr1[i]}<BR>
+        let i++<BR>
+done<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+[root@localhost shell_tao]# echo ${#arr1[@]}<BR>
+8<BR>
+[root@localhost shell_tao]# echo ${arr1[@]}<BR>
+aa bbb  cc dd ee ff gg  hh <BR>
+[root@localhost shell_tao]# echo<span style="color:#ff0000"> ${!arr1[@]}			/</span>//获取下标值<BR>
+0 1 2 3 4 5 6 7<BR>
+[root@localhost shell_tao]# arr1[9]=ss<BR>
+[root@localhost shell_tao]# echo ${arr1[8]}<BR>
+<BR>
+[root@localhost shell_tao]# echo ${arr1[9]}<BR>
+ss<BR>
+[root@localhost shell_tao]# echo ${arr1[7]}<BR>
+hh<BR>
+shell&gt;echo ${#arr1[0]}<BR>
+2<BR>
+shell&gt;echo <span style="color:#ff0000">${#arr1[1]}</span>               ///取得变量的字符的个数!<BR>
+3                                                       <BR>
+shell&gt;unset arr1                      ////取消数组<BR>
+=====================================================<BR>
+<b>关联数组</b>：<BR>
+注意：在 rhel 6 或以上版本才支持！<BR>
+shell&gt;<span style="color:#a020f0">declare -A table1			//</span>step1<BR>
+shell&gt;<span style="color:#a020f0">table1=([username]=tom [pwd]=123 [age]=20)  		//</span>step2<BR>
+shell&gt;echo ${table1[username]}<BR>
+tom<BR>
+shell&gt;echo ${table1[pwd]}<BR>
+123<BR>
+shell&gt;echo ${table1[age]}<BR>
+20<BR>
+shell&gt;table1[addr]=China			///添加新的元素<BR>
+shell&gt;echo ${#table1[@]}		///返回数组元素的个数<BR>
+4<BR>
+shell&gt;echo ${table1[addr]}<BR>
+China<BR>
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－<BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+<BR>
+::<span style="color:#ff0000">登录shell<BR>
+</span>::<span style="color:#ff0000">非登录shell</span><BR>
+--------------<BR>
+1&gt;su tao   //非登录shell  注意: su <span style="color:#ff0000">-</span> root --&gt;这将是一个登录shell ！<BR>
+2&gt;bash      //非登录shell<BR>
+3&gt;重新打开一个终端! 	//非登录shell!<BR>
+---------------&gt;<BR>
+<BR>
+========================<BR>
+执行登录 shell 的时候，需要用到的环境变量配置文件!<BR>
+<b>登录</b> (5个文件!) <BR>
+step1&gt; <span style="color:#ff0000">/etc/profile	</span>			///最后面添加一个变量!  logout 之后, 就可以打印那个变量的值了!  var=200 ! 注意, /etc/profile 也会调用 /etc/profile.d/*.sh --&gt;在后面! <BR>
+step2&gt; <span style="color:#ff0000">/etc/profile.d/*.sh	</span>		///自己在目录 /etc/profile 创建一个新的 sh 文件，然后赋予可执行权限，然后 logout ，就可以验证了!  声明一个变量: var=100<BR>
+step3&gt; <span style="color:#ff0000">~/.bash_profile</span>			///个人宿主目录下面的隐藏文件!  var=300 （私人的! ） ==&gt;注意看文件中的一条 if 语句，如果有 .bashrc 文件，会执行 .bashrc ! .bash_profile与 .bashrc 的关系是一个调用关系! <BR>
+								///.bash_profile 的执行步骤是第三步，只是文件里面会调用 .bashrc 文件 ！<BR>
+step4&gt; <span style="color:#ff0000">~/.bashrc</span>				/// .bashrc 里面也会调用全局的  /etc/bashrc 文件 ! <BR>
+step5&gt; <span style="color:#ff0000">/etc/bashrc</span><BR>
+========================<BR>
+登录shell&gt;<BR>
+登录的时候，下面的5个文件将被执行！顺序以及关系如下！<BR>
+<span style="color:#0000ff">/etc/profile ----调用---&gt;/etc/profile.d/*.sh ----------&gt;.bash_profile ---------调用-----&gt;.bashrc-------调用------&gt;/etc/bashrc<BR>
+</span>非登录shell&gt;<BR>
+<span style="color:#0000ff">/etc/profile.d/*.sh--&gt;~/.bashrc--&gt;/etc/bashrc<BR>
+</span><BR>
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝<BR>
+退出shell的时候，会去执行的环境变量的配置文件是：  <span style="color:#ff0000">~/.bash_logout </span><BR>
+<BR>
+======================================================================<BR>
+<BR>
+<BR>
+<BR>
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\<BR>
+小问题：<BR>
+	怎么修改 ftp 的服务目录 /var/ftp !!!????<BR>
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\<BR>
+shell&gt;alacarte			///看到菜单布局！<BR>
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\<BR>
+删除有依赖关系的rpm 包！<BR>
+shell&gt;rpm -e portmap <span style="color:#0000ff">--nodeps</span> <BR>
+==========================================================<BR>
+<BR>
+脚本中：用 exit 会退出当前的shell ！<BR>
+return !<BR>
+如果 return 后面没有加数值的时候，它返回给 $? 的值 ，是它的上一条命令的执行结果 ! <BR>
+<BR>
+<BR>
+-------------------------------------------------------------------<BR>
+某些命令内建命令使用+ 来打开特定的选项, 用-来禁用这些特定的选项 !<BR>
+<BR>
+===============================================================================<BR>
+<BR>
+nfs access control: 访问控制! <BR>
+vim /etc/hosts.allow<BR>
+portmap: 192.168.0.0/255.255.255.0<BR>
+vim /etc/hosts.deny<BR>
+portmap:all<BR>
+<BR>
+================================================================================<BR>
+**************************************************************************************************************************<BR>
+shell&gt;echo <span style="color:#ff0000">~+</span><BR>
+/<BR>
+shell&gt;echo <span style="color:#0000ff">~-</span><BR>
+/home<BR>
+shell&gt;echo <span style="color:#ff0000">$PWD</span><BR>
+/<BR>
+shell&gt;echo <span style="color:#0000ff">$OLDPWD</span><BR>
+/home<BR>
+-----------------------------------<BR>
+特殊变量<span style="color:#0000ff">$IFS</span>用来做一些输入命令的分隔符, 默认情况下是空白.<BR>
+------------------------------------------<BR>
+例外: 在pipe中的一个大括号中的代码段可能运行在一个 子shell中.<BR>
+shell&gt;ls | { read firstline; read secondline; }<BR>
+   # 错误. 在大括号中的代码段, 将运行到子shell 中,<BR>
+   #+ 所以&quot;ls&quot; 的输出将不能传递到代码块中<BR>
+shell&gt;echo &quot;First line is $firstline; second line is $secondline&quot;    .# 不能工作.<BR>
+----------------------------------------------------------<BR>
+**************************************************************************************************************************<BR>
+shell&gt;seq -w 5<BR>
+1<BR>
+2<BR>
+3<BR>
+4<BR>
+5<BR>
+*******************************************************************************************************<BR>
+shell&gt;history -c            ///清除历史记录！<BR>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+shell&gt;test -x test8.sh      ///查看文件是否有 x 权限!<BR>
+shell&gt;echo $? <BR>
+0                         ////则其有 x 权限 !<BR>
+--------------------------------------------------------------<BR>
+<BR>
+<b>执行脚本的方法：</b><BR>
+------------------------------way_1 (子shell)<BR>
+shell&gt;./test.sh<BR>
+shell&gt;/root/test.sh<BR>
+------------------------------way_2 (子shell)<BR>
+shell&gt;bash  test.sh<BR>
+shell&gt;sh test.sh<BR>
+------------------------------way_3 (当前shell)<BR>
+shell&gt;. test.sh<BR>
+shell&gt;source test.sh   <BR>
+----------------------------+++++++++++++++++++++++<BR>
+<BR>
+shell&gt;echo $BASH_VERSION         ///获取当前系统bash 的版本号!<BR>
+shell&gt;rpm -q bash                   ///也可以获取到!<BR>
+<BR>
++++++++++++++++++++++++++++++++++++++++++++<BR>
+shell&gt;echo $RANDOM			///伪随机数! <BR>
+shell&gt;(( a=$RANDOM % 10 ))                  ///产生0~9 里面的随机数 !<BR>
+shell&gt;(( a=$RANDOM % 20 ))                  ///产生0~19 里面的随机数 !<BR>
+老师的体会是，awk 里面的随机数来得不是那么随机！呵呵！<BR>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+--------------------------------------------------------------------------------------------------------------------------<BR>
+<b><span style="color:#ff0000">这个现象</b></span>，看到过好多好多次了!<BR>
+shell&gt;find /etc -name *.conf<BR>
+shell&gt;touch a.conf b.conf<BR>
+shell&gt;find /etc -name *.conf<BR>
+find: 路径必须在表达式之前<BR>
+Usage: find [-H] [-L] [-P] [path...] [expression]<BR>
+shell&gt;find /etc -name <span style="color:#ff0000">&quot;</span>*.conf<span style="color:#ff0000">&quot;</span><BR>
+--&gt;注意，是通配符* 的原因!??<BR>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+<BR>
+Bash shell基本语法！<BR>
+<BR>
+if  后面是一条命令,命令执行成功，则可以 then ,否则 else !<BR>
+<BR>
++++++++++++++++++++++++++++++++++++++++++++++++++++<BR>
+shell&gt;if test -e file1<BR>
+&gt;then<BR>
+&gt;echo &quot;OK&quot;<BR>
+&gt;else<BR>
+&gt;echo &quot;no&quot;<BR>
+&gt;fi<BR>
+shell&gt;echo <span style="color:#ff0000">$PS2</span><BR>
+<span style="color:#ff0000">&gt;</span><BR>
+---------------------&gt;如果一条命令没有打印完, 则会换行，并且它的提示符由变量 $PS2 决定 ! 如上！<BR>
+--------------------------------------------------<BR>
+整数值的比较！<BR>
+建议用　　(( ))  <BR>
+<BR>
+================================================<BR>
+shell&gt;who           ///当前登录的用户数!<BR>
+shell&gt;who | wc -l		///行数!即用户数！<BR>
+shell&gt;[ `who | wc -l` -gt 10 ]<BR>
+<BR>
+shell&gt;df -Th | grep &quot;/boot&quot; | awk &quot;{print $6}&quot; | tr -d &quot;%&quot; <BR>
+10<BR>
+shell&gt;a=$( df -Th | grep &quot;/boot&quot; | awk &quot;{print $6}&quot; | tr -d &quot;%&quot;  )<BR>
+shell&gt;echo $a<BR>
+10<BR>
+=================================================<BR>
+shell&gt;[ &quot;abc&quot; = &quot;abc&quot; ]<BR>
+shell&gt;[ &quot;abc&quot; == &quot;abc&quot; ]<BR>
+==================================<BR>
+现在推荐使用：<BR>
+整数比较：　(( ))  &amp;&amp; ||<BR>
+字符串比较：　[[ ]]   <BR>
+<BR>
+===========================================<BR>
+[root@localhost shell_Guide]# a=&quot;abc def&quot;<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; == &quot;abc def&quot; ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+0<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ &quot;abc&quot; ]]		////包含字符串　&quot;abc&quot; <BR>
+[root@localhost shell_Guide]# echo $?<BR>
+0<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ &quot;123&quot; ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+1<BR>
+======================================<BR>
+正则表达式: <BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ ^&quot;abc&quot; ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+0<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ &quot;abc&quot;$ ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+1<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ &quot;def&quot;$ ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+0<BR>
+-----------------------------------------------------------------------------<BR>
+跟传统的正则表达式的写法一样也行：<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ &quot;^abc&quot; ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+0<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ &quot;abc$&quot; ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+1<BR>
+[root@localhost shell_Guide]# [[ &quot;$a&quot; =~ &quot;def$&quot; ]]<BR>
+[root@localhost shell_Guide]# echo $?<BR>
+0<BR>
+-----------------------------------------------------------------------------<BR>
+[root@localhost ~]# [[ &quot;abc&quot; == &quot;abc&quot; &amp;&amp; &quot;def&quot; == &quot;def&quot; ]]<BR>
+[root@localhost ~]# echo $?<BR>
+0<BR>
+[root@localhost ~]# [[ &quot;abc&quot; == &quot;abc&quot; &amp;&amp; &quot;def&quot; == &quot;xyz&quot; ]]<BR>
+[root@localhost ~]# echo $?<BR>
+1<BR>
+[root@localhost ~]# [[ &quot;abc&quot; == &quot;abc&quot; || &quot;def&quot; == &quot;xyz&quot; ]]<BR>
+[root@localhost ~]# echo $?<BR>
+0<BR>
+<BR>
+=====================================<BR>
+-------------------&gt;[ <span style="color:#ff0000">exit </span> 与　<span style="color:#ff0000">return </span>]<span style="color:#ff0000"> </span><BR>
+#!/bin/bash<BR>
+read -p &quot;How old are you: &quot; age<BR>
+if (( age &lt;= 0 || age &gt;= 120 ))<BR>
+then<BR>
+        echo &quot;Error&quot;<BR>
+#       exit 10;<BR>
+        return 10<BR>
+#       return-&gt;1:用source命令执行;2:将return 用于函数中!<BR>
+#+      否则，将不能成功退出脚本！<BR>
+#????是不是 exit 退出的是 shell! 而return 退出的只是 脚本??<BR>
+fi<BR>
+date<BR>
+=============================================<BR>
+shell&gt;pgrep &quot;vsftpd&quot;              ///查看是否有这个服务，如果有，则打印其进程号!<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+
+</DD>
+</DL>
+</BODY>
+</HTML>

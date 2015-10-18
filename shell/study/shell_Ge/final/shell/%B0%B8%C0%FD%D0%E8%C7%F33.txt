@@ -1,0 +1,72 @@
+1、双线路由切换器
+test52.sh
+网关有两条线路接入, 一条是网通光纤, 网关是10.0.0.1,
+另一条是电信ADSL2兆, 网关是20.0.0.1.
+网通线路为主, 电信线路为后备, 当网通线路不通时, 要立刻切换到备用线路上,
+之后当网通线路恢复之后还要立刻切换到网通线路上.
+1) 切换路由之后, 要记录日志, 日志格式如下:
+日期 时间 网关IP -> 新网关IP
+
+2、端口扫描
+tet53.sh
+用ICMP协议检测联通性
+用nmap工具进行端口扫描
+1) 检测地址的格式
+2) 生成的统计信息显示在屏幕上、记录到文件中
+
+3、动态防火墙
+test54.sh
+从日志文件得到可疑IP地址, 然后统计该值与指定的值比较, 
+达到该值就封掉这个IP, 间隔一定时间后再开放这个IP
+
+4. 将/var/www/html下*.HTM改为*.htm
+(将.txt后缀均去掉)
+test55.sh
+
+5. 脚本接收两个参数ID和content
+若ID在文件id.list中, 则向数据库插入一条记录
+若不在, 则将ID与content写入文件rs.txt中
+id.list文件如下:
+01 linux
+02 unix
+03 ubuntu
+04 windows
+test56.sh
+运行方式: 
+./test56.sh 04 ds.com id.list
+./test56.sh 05 "ds keji" id.list
+
+
+
+
+
+
+
+6.
+从文件user.list中取出已给定的用户名和用户组，将这些用户和组添加到系统中
+并给用户设置passwd.list文件中对应的密码
+
+user.list 
+zhangsan	adminuser,dbuser,appuser     
+lisi    	dbuser,appuser     
+wang	  	appuser,comuser   
+
+passwd.list
+zhangsan	123456
+lisi		456789
+wang		789123	
+
+7.
+在/var/log/secure 文件中统计非法尝试ssh的ip及其尝试次数
+在一行中完成程序
+要求输出类似
+3	192.168.0.1
+6	192.168.0.3
+9	192.168.0.5
+
+8. 
+test90.sh
+提取出/usr/share/doc目录下所有文件名为index.html的文件
+把它们集中放在/tmp/index目录中, 
+第一个找到的index.html重命名为index.html.1
+第二个为index.html.2, 以此类推

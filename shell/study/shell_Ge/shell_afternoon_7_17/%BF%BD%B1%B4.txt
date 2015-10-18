@@ -1,0 +1,123 @@
+
+企业SHELL脚本编程(Enterprise SHELL Scripts Programming)
+使用系统: rhel6.1 bash-4.1.2
+第一章 Shell基础知识
+1. 什么是shell
+2. shell所处的位置(作用): 画图
+3. 常见的shell种类
+	cat /etc/shells
+	chsh -l
+	ls /bin/*sh 
+	ls /sbin/nologin
+	rpm -ivh tcsh ksh
+4. shell环境的切换
+	临时切换:
+	ps u #ps aux
+	pstree | grep "sh"
+	ksh
+	csh
+	
+	echo $SHLVL #shell的层数
+	
+	chsh
+	usermod -s /sbin/nologin tom
+5. bash的常用快捷键
+	tab
+	两次tab
+	ctrl + i
+	ctrl + a
+	ctrl + e
+	ctrl + f
+	ctrl + b
+	ctrl + k
+	ctrl + u
+	ctrl + l
+	ctrl + p
+	alt  + . 上一条命令的最后一个参数
+6. 命令历史
+	vim /etc/profile
+	HISTSIZE=5, history的结果就只有最近的5条了, 退出时, 自动将这5条覆盖写入~/.bash_history, 
+	. /etc/profile #将/etc/profile看成一个脚本文件
+	登录时, 读~/.bash_history, 文件中命令数目也被截为HISTFILESIZE的值.  
+	set | grep HISTSIZE
+	!10
+	!f #最近执行过fdisk -l /dev/sda
+	!! #上一条
+7. shell脚本中的特殊字符
+	""
+	''
+	
+	\	单字符转义
+	""	弱字符串转义($ !不可以)
+	''	强字符串转义
+	
+	echo \*
+	
+	echo  "* *"
+	echo "$USER"
+	echo "!!"
+	换成单引号
+	
+	`` #echo "aa $LOGNAME, `date +%T` bb cc"
+	;
+	&
+	() 创建成组的命令, 在子shell中运行, a=( $( ls ) ), 注意a会成为数组
+	{} 组合 touch a{1,2,3,4}
+	   创建命令块, 或叫匿名函数
+	|
+	Linux 默认提供了三个I/O 通道
+	Standard Input, 文件描述符: 0, 默认是键盘
+	Standard Output, 文件描述符: 1, 默认是终端显示器
+	Standard Error, 文件描述符: 2, 默认是终端显示器
+	几条命令:
+	cut -d: -f1 /etc/passwd | sort -r | less
+	ls -l | mail -s 'file list' tom@gmail.com
+	cat files_to_delete.txt | xargs rm -f #将输入转化为参数列表
+	ls *.sh | xargs rm -f
+	
+	env | tee env.out
+	
+	< #tr 'a-z' 'A-Z' < file1
+	>
+	* ? [] ^ 模式匹配 #[]有且仅有1个 ?也是有且仅有1个
+	!
+	$ 取变量的值
+	#
+	空格, 制表符, 换行符 当做空白
+	
+	#########
+	
+	特殊符号:
+	${var1}
+	`` $(cmd) 命令替换
+	( cmd1; cmd2 ) &> /dev/null 子shell中执行命令, 注意可以取得当前父shell的本地变量
+	{ cmd1; cmd2; } &> /dev/null 当前shell中执行命令
+	
+	a=$(( 10 + 20 )) 数学运算(POSIX标准的扩展)
+	a=$[ 10 + 20 ] 数学运算
+	(( a = 10 + 20 ))
+	
+	(())复合命令, 做整数算术运算或算术比较, (( a=10*2 )), (( 10-10 )), (( 10>5 )), (( 10>20 )), 查看$?的值, 算出值非0则$?返回0
+	(( a += 1 ))
+	(( a=b % c ))
+		
+	推荐作法: 整数数值的比较、运算均用(())
+	while (( a < b )); do
+	done
+	if (( a == 0 )); then
+	fi
+	for (( i=1; i<=5; i++ )); do
+	done
+		
+	推荐作法: 字符串的比较用[[]]
+	if [[ $a = true ]]
+					
+	[] 必选其中一个 grep "ro[opq]t"
+	   测试: if [ 5 -gt 4 ]
+	   if [[ "abc" == "def" ]]
+	() 数组 (0 1 2 3 4)
+	&& 
+	|| 
+	
+	#########
+	

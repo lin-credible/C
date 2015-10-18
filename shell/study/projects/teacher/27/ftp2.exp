@@ -1,0 +1,7 @@
+#!/usr/bin/expect -f
+#
+set ip [ lindex $argv 0 ]
+spawn ftp $ip
+expect "*refused*"
+send "quit\r"
+expect eof

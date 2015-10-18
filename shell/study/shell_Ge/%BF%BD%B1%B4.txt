@@ -1,0 +1,400 @@
+
+企业SHELL脚本编程(Enterprise SHELL Scripts Programming)
+使用系统: rhel6.1 bash-4.1.2
+第一章 Shell基础知识
+1. 什么是shell
+2. shell所处的位置(作用): 画图
+3. 常见的shell种类
+	cat /etc/shells
+	chsh -l
+	ls /bin/*sh 
+	ls /sbin/nologin
+	rpm -ivh tcsh ksh
+4. shell环境的切换
+	临时切换:
+	ps u #ps aux
+	pstree | grep "sh"
+	ksh
+	csh
+	
+	echo $SHLVL #shell的层数
+	
+	chsh
+	usermod -s /sbin/nologin tom
+5. bash的常用快捷键
+	tab
+	两次tab
+	ctrl + i
+	ctrl + a
+	ctrl + e
+	ctrl + f
+	ctrl + b
+	ctrl + k
+	ctrl + u
+	ctrl + l
+	ctrl + p
+	alt  + . 上一条命令的最后一个参数
+6. 命令历史
+	vim /etc/profile
+	HISTSIZE=5, history的结果就只有最近的5条了, 退出时, 自动将这5条覆盖写入~/.bash_history, 
+	. /etc/profile #将/etc/profile看成一个脚本文件
+	登录时, 读~/.bash_history, 文件中命令数目也被截为HISTFILESIZE的值.  
+	set | grep HISTSIZE
+	!10
+	!f #最近执行过fdisk -l /dev/sda
+	!! #上一条
+7. shell脚本中的特殊字符
+	""
+	''
+	
+	\	单字符转义
+	""	弱字符串转义($ !不可以)
+	''	强字符串转义
+	
+	echo \*
+	
+	echo  "* *"
+	echo "$USER"
+	echo "!!"
+	换成单引号
+	
+	`` #echo "aa $LOGNAME, `date +%T` bb cc"
+	;
+	&
+	() 创建成组的命令, 在子shell中运行, a=( $( ls ) ), 注意a会成为数组
+	{} 组合 touch a{1,2,3,4}
+	   创建命令块, 或叫匿名函数
+	|
+	Linux 默认提供了三个I/O 通道
+	Standard Input, 文件描述符: 0, 默认是键盘
+	Standard Output, 文件描述符: 1, 默认是终端显示器
+	Standard Error, 文件描述符: 2, 默认是终端显示器
+	几条命令:
+	cut -d: -f1 /etc/passwd | sort -r | less
+	ls -l | mail -s 'file list' tom@gmail.com
+	cat files_to_delete.txt | xargs rm -f #将输入转化为参数列表
+	ls *.sh | xargs rm -f
+	
+	env | tee env.out
+	
+	< #tr 'a-z' 'A-Z' < file1
+	>
+	* ? [] ^ 模式匹配 #[]有且仅有1个 ?也是有且仅有1个
+	!
+	$ 取变量的值
+	#
+	空格, 制表符, 换行符 当做空白
+	
+	#########
+	
+	特殊符号:
+	${var1}
+	`` $(cmd) 命令替换
+	( cmd1; cmd2 ) &> /dev/null 子shell中执行命令, 注意可以取得当前父shell的本地变量
+	{ cmd1; cmd2; } &> /dev/null 当前shell中执行命令
+	
+	a=$(( 10 + 20 )) 数学运算(POSIX标准的扩展)
+	a=$[ 10 + 20 ] 数学运算
+	(( a = 10 + 20 ))
+	
+	(())复合命令, 做整数算术运算或算术比较, (( a=10*2 )), (( 10-10 )), (( 10>5 )), (( 10>20 )), 查看$?的值, 算出值非0则$?返回0
+	(( a += 1 ))
+	(( a=b % c ))
+		
+	推荐作法: 整数数值的比较、运算均用(())
+	while (( a < b )); do
+	done
+	if (( a == 0 )); then
+	fi
+	for (( i=1; i<=5; i++ )); do
+	done
+		
+	推荐作法: 字符串的比较用[[]]
+	if [[ $a = true ]]
+					
+	[] 必选其中一个 grep "ro[opq]t"
+	   测试: if [ 5 -gt 4 ]
+	   if [[ "abc" == "def" ]]
+	() 数组 (0 1 2 3 4)
+	&& 
+	|| 
+	
+	#########
+	
+	
+8. shell的特性
+	命令别名	
+	ls -lth #t 按修改时间排序, ls -l即修改时间
+	alias
+	unalias
+	别名 函数 内部命令 外部命令
+	
+	#shell不需要启动一个单独的进程来运行内部命令
+	#shell需要创建(fork)和执行(exec)一个新的子进程来运行外部命令	
+	
+	#########
+	命令替换
+	userNum=`w | grep "tty" | wc -l`
+	rpm -qf `which fdisk`
+	rm -rf `find / -user tom`
+	pkg=$(rpm -qf $(which fdisk)) #里面的$()也可换成``
+	#########
+		
+	#########
+	|与重定向
+	ls > file1 2>&1
+	ls &> file1
+	ls &>> file1 #bash4.0或以上支持
+	grep "tom" /etc/passwd &> /dev/null
+	cat > /etc/yum.repos.d/rhel.repo << EOF
+	abc
+	def
+	EOF
+	
+9. shell的输入输出控制
+	echo -n "abc"
+	echo -e "abc\t\tabc"
+	
+	#########
+	a=abc
+	b=def
+	a=$a'\n'$b
+	echo $a
+	echo -e $a
+	#########
+	
+	name='tom'
+	printf 'name is %s\n' $name
+		
+	读取用户输入: read
+	
+	read var1
+	read var1 var2 var3
+	read -p "please input a num: " var1
+	read -s pwd #不显示出来
+10. 变量的概念及作用
+	数据类型? 均为字符串数据类型, 变量名区分大小写
+11. 变量分类
+	本地变量(用户自定义变量)
+	var1=ds
+	var1="ds tech"
+	var1='ds tech'
+	var2="cs $var1 cs"
+	var2='cs $var1 cs'
+	echo $var1
+	echo ${var1}23
+	
+	name="ds's keji"
+	name=ds\'s\ keji
+	---------------------------------------------------------------
+	echo ${var1:+$var2}
+	echo $var1 $var2
+		
+	echo ${var1:-$var2}
+	echo $var1 $var2
+	
+	echo ${var1:?$var2}
+	echo $var1 $var2
+		
+	echo ${var1:=$var2}	
+	echo $var1 $var2
+	---------------------------------------------------------------
+	var1=abcdefghij
+	echo ${var1:3:2}
+	echo ${var1:3}
+	echo ${#var1}
+	
+	expr length $var1
+	expr substr $var1 3 2
+	expr substr $var1 3 99
+		
+	declare -i sum=10+20+30
+	readonly
+	declare -r sum
+	set
+	unset var1
+	#########
+	环境变量
+	var1=ds.com
+	export var1
+	export var1=ds.com
+	
+	declare -x sum
+	export | grep "sum"
+	env
+	printenv
+	
+	PATH #仅对外部命令
+	HOME
+	UID
+	HOSTNAME
+	PWD
+	#########
+	位置参数变量
+	$0 $1 ... ${10}
+	service#$0 network#$1 restart#$2
+	
+	#########
+	关于循环获取位置参数变量:
+	
+	$1 $2 $3 ...
+	1 增长到2 3 ...
+	i=1 i++
+	$$i, 这样是不行的, shell不支持变量名是变量,
+	
+	方法1: shift
+	使用shift, 执行一次shift, 位置参数往左移一个, 原先的$2变成了$1,
+	只要获取$1即可获取后面的$2 $3 ...的值
+	while (( $# > 0 ))
+	do
+		echo $1;
+		shift;
+	done
+	exit 0;
+	方法2: 使用$@
+	for i in "$@"
+	do
+		echo "$i";
+	done
+	exit 0;
+	方法3: 间接引用
+	i=1;
+	while (( i <= $# ))
+	do
+		echo ${!i};
+		let i++; #(( i++ ))
+	done
+	exit 0;
+	
+	#########
+	预定义变量(特殊变量)
+	$#
+	$$ #本shell的PID值, 当前进程ID号
+	
+	$@ $*
+	"$*"以"$1 $2..."的形式保存所有输入的命令行参数
+	"$@"以"$1" "$2"...的形式
+	for i in "$*" 或 "$@"
+	do
+		echo $i;
+	done
+		
+	$? #[0, 255]整数
+	每个命令在退出时都会返回一个退出状态值(exit status)
+	正常退出, 返回0
+	异常退出, 返回非0
+	退出状态值保存在特殊变量$? 中
+11. 算术运算
+	仅整数
+	
+	bash只支持整数的运算, 浮点数运算可以使用bc
+	echo "scale=3; 13/2" | bc #scale为小数点位数
+	
+	declare -i a
+	a=5+5
+	
+	a=1+2
+	echo $a
+	echo 1+2
+	
+	expr 1 \* 2
+	USAGE=$( expr $USED \* 100 / $TOTAL )
+	
+	echo $[ 10 * 20 ]
+	echo $(( 3**(1+1+1) )) #()用来改变运算顺序
+	(( a=10 * 20 )) #(())主要用来数学计算
+	
+	let a=5+9 #let常用来赋值
+	let b=$a-3 c=$a*2 c=$a/3 d=$a%3
+	declare -i a=3**3
+	
+	a=3
+	let b=$a**3
+	
+	let a++
+	let a+=10
+	#########
+	浮点数运算
+	rpm -q bc
+	bc
+	echo "3.14*2" | bc
+	echo "scale=3; 10/3" | bc #3位小数
+12. 数组
+	在白板上画出数组图, 0号元素, 1号元素, 2号元素
+	目前只支持一维数组
+	索引数组
+	names[0]=tom
+	names[1]=jerry
+	names[2]=lee
+	names[3]=kevin
+	
+	遍历数组:
+	for i in ${names[@]}
+	do
+		echo $i;
+	done
+	
+	#########
+	names[x++]=tom
+	names[x++]=jerry
+	names[x++]=lee
+	names[x++]=kevin
+	用在循环中就很好的生成了数组, 或将一些值逐一放入数组中如: 
+	for i in tom jerry lee mike
+	do
+		names[x++]=$i;
+	done
+	for i in ${names[@]}
+	do
+		echo $i;
+	done
+	-----------------------------------------------------
+	r=( `route -n | grep "UG"` ) #r变成了数组
+	echo ${r[3]}
+	
+	var1="aa bb cc"
+	var2=( $var1 ) #var2变成了数组
+	echo ${var2[1]}
+	
+	#########
+	echo ${names[0]}
+	
+	names=(tom jerry lee kevin)
+	names=([0]=tom [1]=jerry [3]=lee [5]=kevin cali)
+	names=(tom [5]=jerry lee)
+	
+	echo ${names[@]}
+	echo ${names[*]}
+	
+	echo ${#names[@]}
+	echo ${#names[*]}
+	echo ${!names[@]} #打印下标值
+	echo ${!names[*]}
+	
+	echo ${names[2]}
+	echo ${#names[2]}
+	
+	unset names
+	unset names[2]
+	
+	#########
+	关联数组
+	bash 4.0版本开始支持关联数组
+	declare -A a
+	a=([userName]=tom [pwd]=password1 [age]=20 [addr]=hncs)
+	a[gender]=male
+	
+13. bash的启动配置文件(环境变量配置文件)
+	登录shell
+	login shell 指的是输入用户名、密码, 从系统登录时执行的第一个程序
+	
+	/etc/profile
+	
+	/etc/profile.d/*.sh
+	
+	~/.bash_profile
+	
+	~/.bashrc
+	
+	/etc/bashrc
+	

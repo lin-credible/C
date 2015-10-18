@@ -1,0 +1,327 @@
+正则表达式(Regular Expression)
+什么是正则表达式
+正则表达式的作用
+grep sed awk vim均实现了正则表达式
+如 cat /etc/passwd | grep "^[A-Z]"
+
+匹配email地址
+grep -E "[a-Z0-9.]+@[a-Z0-9.]+\.[a-Z]{2,3}" file1
+匹配HTTP URL
+grep -E "http://[a-Z0-9.]+\.[a-Z]{2,3}" file1
+
+正则表达式的元字符
+/^love/
+
+/love$/
+
+/l..e/ #单个任意字符(换行符\n除外), 有且仅有一个
+
+/abc* #ab后接0个或多个c
+
+/o*ve #*将前面的那一个字符o重复0次或多次
+
+/[Ll]ove #有且仅取1个
+
+/[a-z]ove
+
+/[A-Z]ove
+
+/[^a-z]ove
+
+/ove[^a-zA-Z0-9]
+
+/love\. #love.
+
+/\<bin\> #单词匹配, sbin不会匹配
+
+/\(lov\)aa\1er #标签, lovaalover
+
+:1,$ s/\([Aa]bc\)yz/\1xyz/g
+
+:1,$ s/\(abc\) and \(xyz\)/\2 and \1/g 
+
+/abco\{5\} #字符o连续出现5次
+
+/abcx\{2\}y\{3\} #x重复2次, y重复3次
+
+/abco\{5,\} #字符o连续出现至少5次
+
+/abco\{5,10\} #字符o连续出现5到10次
+
+/oo.* #oo后接任意字符串.*, 假如有一行以oo开头, 则这一行均匹配
+
+以b或f或m开头的行 /^[bfm]
+不是以小写字母开头的行 /^[^a-z]
+/\<f.*th\>
+
+bash提供的通配符与正则元字符的区别:
+ls *.h
+ls | grep "*.h"
+ls | grep ".*\.h"
+
+POSIX类字符集
+/[[:digit:]] #数字
+/[[:upper:]] #大写字母
+grep -n "^[[:lower:]]" file1 #小写字母开头
+
+grep的使用
+global search regular expression(RE) and print out the line
+Unix的grep家族包括grep、egrep和fgrep
+
+grep "root" /etc/passwd -c #有多少行匹配
+grep "root" /etc/passwd -n
+grep "root" /etc/passwd /etc/shadow -h
+cat /etc/grub.conf | grep -v "^#"
+grep -n "^$" file1 #空白行
+cat file1.sh | grep -v "^\s*$"
+pstree | grep -A 2 -B 2 bash
+
+grep支持的扩展的正则表达式元字符
+grep "root|ftp" /etc/passwd -E
+grep root\|ftp /etc/passwd -E
+
+egrep "^ro{2,5}t$" fstab
+egrep "^ro{2}t$" fstab
+egrep "^ro{2,}t$" fstab
+
+1. seq
+	seq 4 #seq 1 4, 默认从1开始, 所以可省略1
+	seq 3 6
+	seq -3 3
+	seq -w 10 #等宽输出, 与位数最多的对齐
+
+2. tr
+	tr是单个字符处理工具, 而不是字符串处理工具
+ 
+ 	替换:
+	1、将文件file中出现的"abc"替换为"xyz"
+ 	cat file | tr "abc" "xyz" > new_file
+ 	凡是在file中出现的"a"字母, 都替换成"x"字母
+	               "b"字母替换为"y"字母
+				   "c"字母替换为"z"字母
+	而不是将字符串"abc"替换为字符串"xyz"
+ 
+	2、使用tr命令"统一"字母大小写
+	cat file | tr "a-z" "A-Z" > new_file
+	cat file | tr "A-Z" "a-z" > new_file
+ 
+	3、把文件中的数字0-9替换为a-j
+	cat file | tr "0-9" "a-j" > new_file
+
+	4、制表符\011 空格符\040    
+	cat file | tr "\011" "\040" > new_file
+ 
+	5、冒号":"替换成换行符"\n"
+ 	echo $PATH | tr ":" "\n"
+
+	-----------------------------------------------------------------------------------------
+		
+	删除:
+	6、删除文件file中出现的"snail"字符
+ 	cat file | tr -d "snail" > new_file
+ 	凡是在file文件中出现的's','n','a','i','l'字符都会被删除, 而不是仅删除出现的"snail"字符串
+ 
+	7、删除文件file中出现的换行'\n'、制表'\t'字符
+ 	cat file | tr -d "\n\t" > new_file
+ 	不可见字符都得用转义字符来表示的, 这个都是统一的
+ 	
+	8、删除"连续着的"重复字母, 压缩成第一个
+ 	cat file | tr -s "a-zA-Z" > new_file
+ 	echo "a b  c   d    e" | tr -s " " #把空格压缩成1个
+	
+	9、删除空行
+ 	cat file | tr -s "\n" > new_file
+ 	
+	10、删除Windows文件"造成"的'^M'字符
+ 	cat file | tr -d "\r" > new_file
+	或者
+	cat file | tr -s "\r" "\n" > new_file
+ 	这里-s后面是两个参数"\r"和"\n", 用后者替换前者
+ 	
+	替换或删除
+	echo "12M" | tr -d "M" #删掉M, 输出12, 太帅了!
+	tr -d " " #删掉空格
+	
+	echo "12abcXYZ" | tr -d "a-zA-Z" 
+	
+	echo "aaabbbccc" | tr -s "a-z" #将重复的小写字母压缩为1个, abc
+	echo "aaaBBB999" | tr -s "a-zA-Z0-9" #将重复的大小写字母或数字均压缩为1个, aB9
+	echo "a       b" | tr -s " " #将重复的的空格压缩为1个
+	
+	echo "abc" | tr "a-z" "A-Z" #小写替换成大写
+		
+3. sort
+	对行进行排序, 默认字段分隔符是空白(与awk一样)
+	sort -t: /etc/passwd #-t指定字段分隔符
+	sort -t: -k3 /etc/passwd #-k3: 以第3个字段排序, 默认以第1个字段排序
+	sort -t: -k3n /etc/passwd #n表示数值
+	sort -t: -k3nr /etc/passwd #r表示反向
+	
+4. uniq
+	先sort再uniq:
+	111
+	111
+	222
+	111
+	
+	去掉重复行
+	vim file1
+	111
+	111
+	111
+	222
+	222
+	333
+	---------
+	uniq -u file1 #只打印唯一的行
+	---------
+	uniq -c file1 #将每行重复出现的次数打印在行首
+	3 111
+	2 222
+	1 333
+	
+5. cut
+	默认字段分隔符为tab, 不是空白, 所以不好控制
+	cut -d " " -f 2 #指定字段分隔符为1个空格, 打印第2列 
+	
+2. sed
+	\s任意的空白符, 包括空格、制表符(tab)、换行符、中文全角空格 
+	\s空白字符: [ \t\n\x0B\f\r]
+	\t 制表符(tab) ('\u0009')  
+	\n 新行, 换行符 ('\u000A')  
+	\r 回车符 ('\u000D')  
+	\f 换页符 ('\u000C')  
+	\a 报警 (bell) 符 ('\u0007')  
+	\e 转义符 ('\u001B')  
+	\cx 对应于x的控制符  
+	
+	sed -i '/^\s*security = user/s/user/share/' smb.conf
+	sed -n '/^\s*security = user/p' smb.conf
+	sed -i 's/^\s*security =.*/\tsecurity = share/' smb.conf
+	sed -i 's/.*hosts allow.*/\thosts allow = 127. 192.168.0.0\/16/' smb.conf
+	sed -i '/hosts allow/s/^.*$/\thosts allow = 127. 192.168.0.0\/16/' smb.conf
+	
+	stream editor, 完美地配合正则使用, 主要进行文本替换 
+	sed [options] 'command' file[s]
+	定位(址)
+	sed -n '1p' file1
+	sed -n '$p' file1 #最后一行
+	sed '2,4p' file1
+	sed -n '2,4p' file1
+	sed -n '2,+4p' file1
+	sed -n '1p;4p;7p' file1 #只打印第1 4 7这3行
+	sed '1s/abc/YYY/; 4s/abc/YYY/' file1
+	
+	sed支持的基本正则
+	sed -n '/^root/p' file1
+	sed -n '/^[^0-9]/p' file1
+	sed -n '/r..t/p' file1
+	
+	sed支持的扩展正则
+	sed -rn '/roo?t/p' file1 #扩展正则, o?, 0个或1个
+	sed -rn '/roo+t/p' file1 #扩展正则, o+, 1个或多个
+	grep -E "[a-Z0-9.]+@[a-Z0-9.]+\.[a-Z]{2,3}" file1
+	
+	sed函数的使用
+	a
+	i
+	c
+	d 删除
+	r
+	w
+	
+	sed '/localhost/a ds.com ftp' file1 #a, 先匹配localhost, 然后在其后插入新行 ds.com ftp
+	sed '/localhost/r /etc/file2' file1 #r, 读取另一文件的内容
+	sed '4r file2' file1
+	sed -n '/aixocm/w file2' file1 #w另存为, file2的内容被覆盖
+	sed '/root/c aixocm' file1 #先匹配root, 将整个这一行替换成aixocm
+	sed '/127/d' file1
+	sed '/tom/d' file1
+	sed '/tom/!d' file1
+	sed '3d' file1
+	sed '1,3d' file1
+	sed '3,$d' file1
+	sed '$a AAA=XYZ' file1 #在file1末行后加一行AAA=XYZ
+	cat file1 | sed '/^$/d'
+	sed -e '1,3d' -e 's/word1/word2/g' file1
+	
+	引用变量
+	var="root"
+	sed "/$var/c aixocm" file1 #换成""即可
+	
+	text="hello"
+	echo "hello world" | sed "s/$text/HELLO/"
+	
+	另一种替换:
+	sed 's/root/ROOT/' file1
+	sed 's/root/ROOT/g' file1
+	sed 's/root/ROOT/2' file1
+	sed '/word1/s/word2/word3/g' file1
+	cat file1 | sed 's/pattern/replace_string/' #从stdin中读取输入
+	
+	sed 's/text/replace/' file1 > newfile
+	mv newfile file1
+	
+	sed -i 's/text/replace/' file1
+	
+	echo "this thisthisthis" | sed 's/this/THIS/'
+	echo "this thisthisthis" | sed 's/this/THIS/g'
+	echo "this thisthisthis" | sed 's/this/THIS/3g'
+	
+	echo "a b c" | sed 's/ //g'
+	
+	/在sed中作为定界符, 可使用任意的定界符如:
+	sed 's:text:replace:' file1 #不推荐
+	
+	echo "ab/c def" | sed 's/ab\/c/xxx/' #要将/转义\/
+	
+	sed '/^$/d' file1 #直接回车产生的空白行
+	sed '/^\s*$/d' file1 #若这行中有空格或tab, \s表示空白
+	
+	echo "this is an example" | sed -r 's/\w+/[&]/g' #匹配一个单词
+	echo "this is an example" | sed -r 's/[a-Z]+/[&]/g' #匹配一个单词 
+	
+	若用了-n, 就要用p, 不然没有显示
+	
+	sed '1,$ s/root/ROOT/g' file1 #1,$不要也可, 默认即所有行
+	sed '2 s/root/ROOT/g' file1 #只替换第2行的root->ROOT
+	sed -i '2,4 s/.*/abcdefg/' file1 #用abcdefg替换file1中2到4行
+	
+	去行首#
+	sed '/ADDR/s/^#//' file1
+	
+	行首加#
+	sed '/ADDR/s/^/#/' file1
+	ls -l | sed 's/^/ /'
+	ls -l | sed 's/^/\t/'
+	
+	多次替换
+	sed 's/localhost/WWW/' file1 | sed 's/127/001/'
+	sed -e 's/localhost/www/' -e 's/127/001/' file1
+	sed 's/localhost/www/; s/127/001/' file1 #组合多个表达式
+	
+	sed标签(子串匹配), 第1个子串\1, 第2个子串\2
+	sed 's/\(root\)/\1_aixocm/g' file1
+	sed -r 's/(root)/\1_aixocm/g' file1
+	sed -r 's/(root)/&_aixocm/g' file1
+
+	echo "this is digit 7 in a number" | sed -r 's/digit ([0-9])/\1/'
+	echo "seven eight" | sed 's/([a-Z]+)([a-Z]+)/\2 \1/'
+	
+	范围匹配
+	sed '/abc/,/xyz/s/aixocm/YYY/' file1 #将abc与xyz之间的aixocm -> YYY, 其它地方的aixocm不会
+	sed '/abc/,/xyz/s/aixocm.*/YYY/' file1
+	sed '/abc/,/xyz/s/.*aixocm/YYY/' file1
+	sed '/abc/,/xyz/s/.*aixocm.*/YYY/' file1 #包含有aixocm的整行被替换
+	
+	sed -n '/abc/,/xyz/p' file1
+	
+	sed改配置文件:
+	sed -i 's/SELINUX=.*/SELINUX=disabled/' /etc/sysconfig/selinux
+	sed -i '/UseDNS/s/^.*$/UseDNS no/' /etc/ssh/sshd_config
+	
+	sed -n '/ext4/p' /etc/fstab
+	sed '/ext4/d' /etc/fstab
+	sed '/^#/d' file1
+	sed -e 's/old/new/g' -e 's/[0-9]$/&.yyy/' file1
+	

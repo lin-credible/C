@@ -1,0 +1,32 @@
+优良的脚本:
+一个脚本应该无错运行并完成任务
+可以重用
+有良好的注释
+一般会将脚本放在cron里面周期运行
+
+1. 打印整个网段的ip mac
+
+2. 打印整个网段开了匿名ftp的主机
+
+3. 主机存活检查
+
+4.
+创建一个Shell 脚本, 用于备份整个/etc 目录.
+备份文件保存在/opt/backup/ 目录下以月份命名的目录中, 格式为: /opt/backup/2007.07/,
+自动检查备份目录是否存在,
+备份文件名格式为: etc-2007.04.05.tar.bz2
+
+5. 备份
+#!/bin/bash
+#name: backup.sh
+#aix是前缀
+#usage: ./backup.sh aix file1 file2 file3 #被备份的文件不带路径
+#       ./backup.sh aix /home /etc /boot  #被备份的文件带有路径
+#还原:   rm -rf /home; tar xPf xxx.tar
+
+6. 
+数据库目录/var/lib/mysql/
+至少每隔三天要做一次完整备份, 备份前需要统计该目录占用的空间大小
+并将备份日期、目录空间大小等信息保存到临时文件/tmp/dbinfo.txt 中
+然后将dbinfo.txt与数据库目录一起备份到/opt/dbbak/中
+备份文件名中要体现当天的日期

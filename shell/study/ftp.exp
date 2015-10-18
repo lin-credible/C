@@ -1,0 +1,8 @@
+#!/usr/bin/expect -f
+#comment
+spawn lftp 192.168.0.222
+send "cd pub/shell/\r" 
+send "lcd /root/Desktop/shell_tao/projects/teacher\r"
+send "mget 案例需求2.txt\r"
+send "quit\r"
+expect eof

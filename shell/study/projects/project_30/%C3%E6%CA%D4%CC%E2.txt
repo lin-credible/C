@@ -1,0 +1,10 @@
+如何得到RedHat Linux系统的内核版本、发行版本?
+
+在RedHat/Centos Linux系统上, 某个进程占用了tcp的1234端口,
+如何得到此进程的ID?
+
+如何查看apache进程数?
+
+在Shell环境下, 如何查看远程Linux系统运行了多少时间?
+
+linux下如何添加路由?

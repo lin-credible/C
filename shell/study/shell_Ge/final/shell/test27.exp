@@ -1,0 +1,7 @@
+#!/usr/bin/expect
+#comment
+spawn yum install httpd
+#expect "*y/N*"
+expect 
+send "y\r"
+expect eof

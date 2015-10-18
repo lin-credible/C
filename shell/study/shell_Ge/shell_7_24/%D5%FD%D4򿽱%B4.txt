@@ -1,0 +1,85 @@
+正则表达式(Regular Expression)
+什么是正则表达式
+正则表达式的作用
+grep sed awk vim均实现了正则表达式
+如 cat /etc/passwd | grep "^[A-Z]"
+
+匹配email地址
+grep -E "[a-Z0-9.]+@[a-Z0-9.]+\.[a-Z]{2,3}" file1
+匹配HTTP URL
+grep -E "http://[a-Z0-9.]+\.[a-Z]{2,3}" file1
+
+正则表达式的元字符
+/^love/
+
+/love$/
+
+/l..e/ #单个任意字符(换行符\n除外), 有且仅有一个
+
+/abc* #ab后接0个或多个c
+
+/o*ve #*将前面的那一个字符o重复0次或多次
+
+/[Ll]ove #有且仅取1个
+
+/[a-z]ove
+
+/[A-Z]ove
+
+/[^a-z]ove
+
+/ove[^a-zA-Z0-9]
+
+/love\. #love.
+
+/\<bin\> #单词匹配, sbin不会匹配
+
+/\(lov\)aa\1er #标签, lovaalover
+
+:1,$ s/\([Aa]bc\)yz/\1xyz/g
+
+:1,$ s/\(abc\) and \(xyz\)/\2 and \1/g 
+
+/abco\{5\} #字符o连续出现5次
+
+/abcx\{2\}y\{3\} #x重复2次, y重复3次
+
+/abco\{5,\} #字符o连续出现至少5次
+
+/abco\{5,10\} #字符o连续出现5到10次
+
+/oo.* #oo后接任意字符串.*, 假如有一行以oo开头, 则这一行均匹配
+
+以b或f或m开头的行 /^[bfm]
+不是以小写字母开头的行 /^[^a-z]
+/\<f.*th\>
+
+bash提供的通配符与正则元字符的区别:
+ls *.h
+ls | grep "*.h"
+ls | grep ".*\.h"
+
+POSIX类字符集
+/[[:digit:]] #数字
+/[[:upper:]] #大写字母
+grep -n "^[[:lower:]]" file1 #小写字母开头
+
+grep的使用
+global search regular expression(RE) and print out the line
+Unix的grep家族包括grep、egrep和fgrep
+
+grep "root" /etc/passwd -c #有多少行匹配
+grep "root" /etc/passwd -n
+grep "root" /etc/passwd /etc/shadow -h
+cat /etc/grub.conf | grep -v "^#"
+grep -n "^$" file1 #空白行
+cat file1.sh | grep -v "^\s*$"
+pstree | grep -A 2 -B 2 bash
+
+grep支持的扩展的正则表达式元字符
+grep "root|ftp" /etc/passwd -E
+grep root\|ftp /etc/passwd -E
+
+egrep "^ro{2,5}t$" fstab
+egrep "^ro{2}t$" fstab
+egrep "^ro{2,}t$" fstab

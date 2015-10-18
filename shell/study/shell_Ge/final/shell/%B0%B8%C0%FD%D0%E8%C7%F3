@@ -1,0 +1,23 @@
+1. test40.sh
+
+2. test41.sh
+循环监控/boot的使用量, 每3秒钟即检查一次, 警告值500MB, 严重警告值800MB, 达到时给root发邮件. 警告值可能为500B, 也可能为500KB/500MB/500GB, 需要用函数作单位的换算
+
+3. test42.sh
+清空/var/log/下某些日志文件, 如messages mailllog httpd/access_log
+(使用数组)
+
+4. test43.sh
+监控/分区、内存、CPU的使用情况,
+/分区	> 50%
+内存	> 40%
+CPU	> 30%
+则将警告信息放入/tmp/alert.txt文件并以邮件发送给root
+
+5. test44.sh
+ftp自动上传下载文件, 使用here文档(<< EOF EOF)
+
+6. test45.sh
+监控apache状态, 当httpd无法被访问时, 重启httpd, 计算机一开机就运行该脚本
+(需用死循环)
+

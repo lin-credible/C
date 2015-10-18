@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+#comment
+
+#set un [ 1index
+set un [ lindex $argv 0 ]
+set pa [ lindex $argv 1 ]
+spawn smbpasswd -a $un
+expect "*password:*"
+send "$pa\r"
+expect "*password:*"
+send "$pa\r"
+expect eof

@@ -1,0 +1,1267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>企业SHELL脚本编程</title>
+<style type="text/css">
+body
+{
+	background-color: #fff;
+	color: #333;
+	font-family: "SimSun", "宋体", "Arial Narrow";
+	font-size: 12px;
+}
+a
+{
+	color: #00F;
+	text-decoration: none;	
+}
+a:hover
+{ 
+	color: #F00;
+	text-decoration: underline;
+}
+</style>
+</head>
+<body>
+<pre>
+# ----------------------------------------------------------------------------------------
+
+企业SHELL脚本编程(Enterprise SHELL Scripts Programming)(所使用系统: rhel6.1 bash-4.1.2)
+
+<a href="#shell中的特殊字符">shell中的特殊字符</a>
+
+<a href="#shell的基本语法">shell的基本语法</a>
+
+<a href="#循环">循环</a>
+
+<a href="#函数(function)">函数(function)</a>
+
+<a href="#关于break continue return exit">关于break continue return exit</a>
+
+<a href="#关于算术运算">关于算术运算</a>
+
+<a href="#关于循环获取位置参数变量">关于循环获取位置参数变量</a>
+
+<a href="#关于循环读取文件内容">关于循环读取文件内容</a>
+
+第一章 shell自身的特性(所使用shell: bash)
+1. 什么是shell: 命令解析器
+2. shell的作用(所处的位置): 画图
+必须掌握: shell是如何解析一个命令行的?
+命令行的处理过程如下:
+1. 历史命令替换
+2. 命令行拆分为token(单词)(以空格或tab隔开, 即以空白隔开)
+3. 历史更新
+4. 处理引用
+5. 定义别名替换和函数
+6. 建立重定向、后台、管道
+7. 变量替换($USER、$name等)
+8. 命令替换(echo "abc `date` def")
+9. 文件名替换(*.conf -> a.conf b.conf)
+10. 程序执行(内部命令、外部命令(二进制程序)、shell脚本程序等)
+
+例1:
+echo "abc $USER def" (假定当前登录用户为root)
+会被解析为 echo "abc root def"然后最后才执行echo命令
+
+例2:
+echo "abc `date +%F` def"
+会被解析为 echo "abc 2012-07-28 def"然后最后才执行echo命令
+
+例3:
+find /etc -name *.conf
+若当前目录下有a.conf与b.conf文件, 则上面命令会被shell解析为:
+find /etc -name a.conf b.conf, 而-name后只能接一个参数, 所以此命令会出错,
+若写成find /etc -name "*.conf", 因""中的*不会被shell解析为任意字符串,
+所以*.conf作为参数传给了find的-name选项, 而find自身实现了*即表示任意字符串的功能,
+所以结果正确.
+
+总结如下:
+一条命令在执行之前, shell先将其后的参数进行替换(解析),
+我们主要把握变量替换、命令替换、文件名扩展(替换), 然后在最后才执行命令.
+这对我们分析一个命令行为何执行出错是必要的, 
+同时我们也更好的认识了shell的命令解析器的这一功能
+(对外部命令本身(二进制程序)它解析不了, 它解析的是外部命令执行之前的命令行中的参数)
+
+3. 常见的shell种类
+	cat /etc/shells
+	chsh -l
+	rpm -ivh tcsh ksh
+4. shell环境的切换
+	临时切换:
+	ps aux | grep "bash"
+	pstree | grep "bash"
+	ksh
+	csh
+	永久改变:
+	chsh
+	usermod -s /sbin/nologin tom
+5. 获取当前所在shell在第几层
+	echo $SHLVL 
+6. bash中的常用快捷键
+	tab
+	两次tab
+	ctrl + i
+	ctrl + a
+	ctrl + e
+	ctrl + f
+	ctrl + b
+	ctrl + k
+	ctrl + u
+	ctrl + l
+	ctrl + p
+	alt  + . 上一条命令的最后一个参数
+7. 命令历史
+	vim /etc/profile, HISTSIZE=5
+	. /etc/profile, HISTFILESIZE的值也变为5了
+	history的结果就只有最近的5条了, 
+	注销用户时, ~/.bash_history文件中的命令数目被截为HISTFILESIZE的值, 
+	自动将这5条覆盖写入~/.bash_history, 
+	用户登录时, 读~/.bash_history   
+	set | grep HISTSIZE
+	!10
+	!f #最近执行过fdisk -l /dev/sda
+	!! #上一条命令
+
+8. 命令别名	
+	alias
+	unalias
+	
+	别名 关键字(如if for之类)或函数 内部命令 外部命令
+	shell不需要启动一个单独的进程来运行内部命令
+	shell需要创建(fork)和执行(exec)一个新的子进程来运行外部命令	
+	
+<a name="shell中的特殊字符">
+9. shell中的特殊字符</a>
+	""
+	首先""是非常重要的
+	第一它解决空格问题, 如果字符串中有空格, 如果参数的值中有空格, 如果变量的值中有空格,
+	都要用""引起
+	第二它阻止shell的替换(扩展), 如你不希望shell将*解析为任意字符串则可将*用""引起(前面有例子)
+	同时要注意""中的$与!还是有特殊意义的, 即还是会被shell进行替换如:
+	echo "*"
+	echo "ds's keji"
+	echo "abc $PATH def"
+	echo "abc!"
+	
+	''
+	echo '*'
+	echo "abc $PATH def"
+	echo 'abc!'
+	
+	\ 单字符转义
+	echo \*
+	echo ds\'s\ keji
+	
+	``与$() 命令替换 
+	echo "abc $LOGNAME, `date +%T` def"
+	userNum=`w | grep "tty" | wc -l`
+	rpm -qf `which fdisk`
+	rm -rf `find / -user tom`
+	pkg=$(rpm -qf $(which fdisk)) #里面的$()也可换成``
+	
+	; 命令分隔符
+	运行多个命令: cd /tmp; ls
+
+
+	& 转入后台
+	() 
+	作用1: 创建成组的命令, 在子shell中运行, 注意可以取到当前父shell的本地变量
+	(cd /etc; date; pwd; cal)
+	作用2: 数组 
+	(tom  jerry mike lee aix)
+	(10 20 30 40 50)
+	a=( `ls` ) #a会成为数组
+	
+	{} 
+	作用1: 组合 
+	touch a{1,2,3,4,5}或touch a{1..5}
+	mkdir chap{01,02,03,04}
+	mkdir -p chap{01,02,03,04}/{html,text}
+	touch {a,b,c}_{1,2,3}
+	作用2: 命令块, 或叫匿名函数, 在当前shell中执行如: { cd /etc; date; pwd; cal; }
+	作用3: 将变量名引起: ${var1}23
+	
+	
+	| 管道
+	cut -d: -f1 /etc/passwd | sort -r | less
+	ls -l | mail -s 'file list' root
+	cat files_to_delete.txt | xargs rm -f #将输入转化为参数列表
+	ls *.sh | xargs rm -f
+	env | tee env.out
+	
+	< > 2> &> <<
+	linux 默认提供了三个I/O通道
+	standard input 		文件描述符: 0, 默认是键盘
+	standard output 	文件描述符: 1, 默认是终端显示器
+	standard error	 	文件描述符: 2, 默认是终端显示器
+	 
+	tr "a-z" "A-Z" < file1
+	ls > file1 2>&1
+	ls &> file1
+	ls &>> file1 #bash4.0或以上支持
+	( cmd1; cmd2 ) &> /dev/null
+	{ cmd1; cmd2; } &> /dev/null
+	
+	grep "tom" /etc/passwd &> /dev/null
+	cat > /etc/yum.repos.d/rhel.repo << EOF
+	abc
+	def
+	EOF
+		
+	
+	* ? ^ 模式匹配, ?也是有且仅有1个
+	
+	[] 
+	作用1: shell元字符, 有且仅有1个
+	grep "ro[a-goru]t" /etc/passwd
+	ls test[0-9].sh
+	作用2: 测试命令, 等同test命令
+	[ 5 -gt 4 ] #man test查看, 数值的比较用-gt -lt之类
+	[ "$a" == "abc def" ] #字符串的比较用==或!=
+	
+	[[]] 字符串的比较, 推荐
+	[[ "$a" == "abc def" ]]
+	推荐作法: 字符串的比较用[[]]
+	if [[ "$a" == "abc def" ]]
+	
+	!
+	作用1: 执行历史命令 !if
+	作用2: 在测试中取反 
+	[ ! -d "/backDir" ]
+	! rpm -q gcc
+	! grep "tom" /etc/passwd
+    
+	$ 取变量的值
+	# 注释
+    
+	^ shell元字符, 取反
+	ls test[^0-9].sh
+    
+	空格、制表符、换行符均当做空白
+	
+	$(()) $[] 整数算术运算
+	a=$(( 10 + 20 )) 
+	a=$[ 10 + 20 ]
+	
+	expr命令也是整数算术运算
+	expr 10 + 20
+	a=`expr 10 + 20`
+	
+	(()) 复合命令, 做整数算术运算或算术比较, 运行效率较高, 推荐使用
+	(( a = 10 * 2 ))
+	(( a += 1 ))
+	(( a = b % c ))
+	while (( a < b ))
+	if (( a >= b ))
+	for (( i=1; i<=5; i++ ))
+	推荐作法: 整数算术运算或算术比较均用(())
+	
+	&& 逻辑与, 有条件地运行多个命令(列表) 
+	make && make install
+	ls file1 &> /dev/null && cat file1
+	
+	|| 逻辑或
+	rpm -q gcc || rpm -ivh gcc.rpm
+	
+10. shell的输入输出控制
+	echo -n "abc"
+	echo -e "abc\tdef\nhij"
+	
+	带颜色的输出
+	echo -e "\033[37;44;1mhello\033[0m world"		
+	\033[引导非常规字符序列		37;44;1前后顺序没有关系		m意味着设置属性然后结束非常规字符序列
+	hello
+	\033[引导非常规字符序列		0设置属性到默认设置			m意味着设置属性然后结束非常规字符序列
+	world
+	前景		红31		蓝34			白37
+	背景		红41		蓝44		 	白47
+	1表示设置粗体(无明显效果)
+		
+	echo -e "\033[41mhello\033[0m world" #这样也可, 并不必要3个值, 仅设个背景色
+	echo -e "\033[31mhello\033[0m world" #这样也可, 并不必要3个值, 仅设个前景色
+	
+	name="tom"
+	printf 'name is %s\n' $name
+		
+	读取用户输入: read
+	read var1
+	read var1 var2 var3
+	read -p "please input a num: " var1
+	read -s pwd #不显示出来
+
+11. 变量
+	什么是变量
+	变量的作用
+	变量的数据类型? 均为字符串数据类型, 变量名区分大小写
+ 	
+	变量分类
+	1. 本地变量(用户自定义变量)
+	
+	a="abc"
+	b="def"
+	c="$a\n$b"
+	echo $c
+	echo -e $c
+	
+	var1="abc def"
+	var2="aix $var1 aix"
+	var2='aix $var1 aix'
+	echo $var2
+	echo ${var2}34
+	
+	name="ds's keji"
+	name=ds\'s\ keji
+	
+	# ------------------------------------------------------------
+	# 当var1与var2存在或不存在
+	echo ${var1:+$var2}
+	echo $var1 $var2
+		
+	分别将+号改为- ? =进行测试
+	
+	# ------------------------------------------------------------
+	var1="abcdefg"
+	echo ${var1:3:2}
+	echo ${var1:3}
+	echo ${#var1}
+	
+	expr length $var1
+	expr substr $var1 3 2
+	expr substr $var1 3 99
+		
+	declare -i sum=10+20+30
+	readonly
+	declare -r sum
+	set
+	unset var1
+	
+	2. 环境变量
+	var1="ds.com"
+	export var1
+	export var1="ds.com"
+	
+	declare -x sum
+	export | grep "sum"
+	env
+	printenv
+	
+	PATH #仅对外部命令
+	HOME
+	UID
+	HOSTNAME
+	PWD
+	PPID shell父进程的PID
+	
+	3. 位置参数变量
+	$0 $1 ... ${10}
+	service network restart
+	$0		$1		$2
+	
+    
+	预定义变量(特殊变量)
+	$#
+	$$ #当前shell的PID值
+	$_ 前一个命令的最后参数
+	
+	BASH_VERSION
+	OLDPWD
+	RANDOM
+	
+	$@ $*
+	"$*"以"$1 $2..."的形式保存所有输入的命令行参数
+	"$@"以"$1" "$2"...的形式
+	for i in "$*" 或 "$@"
+	do
+		echo $i;
+	done	
+	
+	# ----------------------------------------------------
+	#!/bin/bash
+	TARFILE=beifen-`date +%s`.tgz
+	tar czf $TARFILE $* &> /dev/null
+	echo "已执行 $0 脚本"
+	echo "共完成 $# 个对象的备份"
+	echo "具体包括: $@"
+	# ----------------------------------------------------
+	
+	$? 命令的返回值, 整数, [0, 255]
+	每个命令在退出时都会返回一个退出状态值(exit status)
+	正常退出, 返回0
+	异常退出, 返回非0
+	退出状态值保存在特殊变量$? 中
+
+12. 算术运算
+	仅整数
+	
+	bash只支持整数的运算, 浮点数运算可以使用bc
+	echo "scale=3; 13/2" | bc #scale为小数点位数
+	
+	declare -i a
+	a=5+5
+	
+	a=1+2
+	echo $a
+	echo 1+2
+	
+	expr 1 \* 2
+	USAGE=$( expr $USED \* 100 / $TOTAL )
+	
+	echo $[ 10 * 20 ]
+	echo $(( 3**(1+1+1) )) #()用来改变运算顺序
+	(( a=10 * 20 )) #(())主要用来数学计算
+	
+	let a=5+9 #let常用来赋值
+	let b=$a-3 c=$a*2 c=$a/3 d=$a%3
+	declare -i a=3**3
+	
+	a=3
+	let b=$a**3
+	
+	let a++
+	let a+=10
+	
+    # ----------------------------------------------------
+	浮点数运算
+	rpm -q bc
+	bc
+	echo "3.14*2" | bc
+	echo "scale=3; 10/3" | bc #3位小数
+
+13. 数组
+	在白板上画出数组图, 0号元素, 1号元素, 2号元素
+	目前只支持一维数组
+	索引数组
+	names[0]=tom
+	names[1]=jerry
+	names[2]=lee
+	names[3]=kevin
+	
+	遍历数组:
+	for i in ${names[@]}
+	do
+		echo $i;
+	done
+	
+	# ----------------------------------------------------
+	names[x]=100 #这个x即是0
+	
+	let y++
+	echo $y #y为1, 说明原来y为0
+	
+	names[x++]=tom #此时x为0, ++后x为1
+	names[x++]=jerry
+	names[x++]=lee
+	names[x++]=kevin
+	用在循环中就很好的生成了数组, 或将一些值逐一放入数组中如: 
+	for i in tom jerry lee mike
+	do
+		names[x++]=$i; #即下标中可以进行数学运算(赋值), 也不需要$, 直接只要变量名即可
+		echo ${names[ ((x-1)) ]} #这样也可
+	done
+	
+	for i in ${names[@]}
+	do
+		echo $i;
+	done
+	# ----------------------------------------------------
+	r=( `route -n | grep "UG"` ) #r变成了数组
+	echo ${r[3]}
+	
+	var1="aa bb cc"
+	var2=( $var1 ) #var2变成了数组
+	echo ${var2[1]}
+	
+	# ----------------------------------------------------
+	echo ${names[0]}
+	
+	names=(tom jerry lee kevin)
+	names=([0]=tom [1]=jerry [3]=lee [5]=kevin cali)
+	names=(tom [5]=jerry lee)
+	
+	echo ${names[@]}
+	echo ${names[*]}
+	
+	echo ${#names[@]}
+	echo ${#names[*]}
+	echo ${!names[@]} #打印下标值
+	echo ${!names[*]}
+	
+	echo ${names[2]}
+	echo ${#names[2]}
+	
+	unset names
+	unset names[2]
+	
+	# ----------------------------------------------------
+	关联数组
+	bash 4.0版本开始支持关联数组
+	declare -A a
+	a=([userName]=tom [pwd]=password1 [age]=20 [addr]=hncs)
+	a[gender]=male
+	
+14. bash的启动配置文件(环境变量配置文件)
+	登录shell
+	login shell 指的是输入用户名、密码, 从系统登录时执行的第一个程序
+	
+	/etc/profile
+	
+	/etc/profile.d/*.sh
+	
+	~/.bash_profile
+	
+	~/.bashrc
+	
+	/etc/bashrc
+		
+	非登录shell
+	登录系统后, 在login shell里启动的shell是非login shell
+	如执行bash命令、在图形中打开终端均是开一个非登录shell
+	login shell与non login shell在启动时执行不同的初始化脚本
+	
+	/etc/profile.d/*.sh
+	~/.bashrc
+	/etc/bashrc
+	
+	su例子:
+	su tom #非登录shell, 执行哪些文件?
+	su - tom #登录shell, 执行哪些文件?
+	
+	退出登录shell时, 执行~/.bash_logout
+		
+<a name="shell的基本语法">
+15. shell的基本语法</a>
+	# ------------------------------------------------------------------------------------
+1. 测试
+	A. 测试文件状态:
+	可用的逻辑运算符: -a -o !
+	test -r "$file1" -a -s "$file1"
+	[ -f "file1" -o -f "file2" ]
+	[ ! -d "/backDir" ] && mkdir /backDir
+	[ -e "/mnt/Server" ] && echo "yes" || echo "no";
+	man test查看
+	echo $?
+	# ------------------------------------------------------------------------------------
+	B. 整数值比较:
+	传统方法:
+	[  "$a" -gt "$b" -a "$b" -gt "$c" ]  && echo "a is largest"
+	[ `who | wc -l` -le 10 ] && echo "ok"
+	
+	var1=`df -hT | grep "/boot" | awk '{print $6}' | cut -d% -f1`
+	[ "$var1" -gt 90 ] && echo "ok"
+	
+  	推荐方法:
+	if (( a > b && b > c ))
+	then
+		echo 'a is largest';
+	fi
+	# ------------------------------------------------------------------------------------
+	C. 字符串比较:
+	=或== 两个字符串相等
+	!= 两个字符串不等
+	-z 字符串为空
+	-n 字符串非空
+	man test查看
+	传统方法:
+	[ "$a" == "abc def" ]
+	[ -n "$a" ]
+    
+	推荐方法:
+	用[[]]来进行字符串比较
+	[[ "$a" == "abc def" ]]
+	read -p  "input: " file
+	[[ "$file" != "/etc/fstab" ]] && echo "ok"
+	[[ -n `cat file1` ]] && echo "ok"
+	[[ $USER == "root" || $SHELL = "/bin/bash" ]] && echo "ok"
+	[[ "$a" =~ "-" || "$a" =~ "^:" || "$a" =~ ":$" ]] #匹配正则
+	# ------------------------------------------------------------------------------------
+2. 条件
+	任何命令都可以作为条件, 执行并检查命令的返回值
+	if关键字
+	
+	对命令执行结果的判断:
+	若一条命令执行成功了则做什么, 没成功则做什么
+	3种方法:
+	A.
+	if ls -d /dir1
+	then
+		echo "ok";
+	else
+		echo "fail";
+	fi
+	# ------------------------------------------------------------------------------------
+	B.
+	ls -d /dir1
+	if (( $? == 0 )) #[ $? -eq 0 ]
+	then
+		echo "ok";
+	else
+		echo "fail";
+	fi
+	# ------------------------------------------------------------------------------------
+	C.
+	ls -d /dir && echo "ok" || echo "fail";
+	# ------------------------------------------------------------------------------------
+	if [ ! -d "/tmp/{sda1,sda3}" ]
+	then
+		( mkdir /tmp/{sda1,sda3} > /dev/null 2>&1 )
+	fi
+	# ----------------------------------------------------
+	if ls "$1"
+	then
+		chmod 600 "$1";
+	else
+		echo "the file $1 does not exist";
+	fi
+	# ----------------------------------------------------
+	if test -e "$1"
+	if [ -e "$1" ]
+	# ----------------------------------------------------
+	if rpm -q gcc
+	then 
+		echo "yes"; 
+	else 
+		echo "no"; 
+	fi
+	# ----------------------------------------------------
+	rpm -q gcc && echo "ok" || echo 'please install gcc !'
+	# ----------------------------------------------------
+	if ping -c3 server1
+	then
+		echo "server1 is up";
+	fi
+	# ----------------------------------------------------
+	echo -n "how old are you"
+	read age
+	if (( age <= 0 || age >= 120 ))
+	then
+		echo "error"
+		exit 1;
+	fi
+	# ----------------------------------------------------
+	if [ -r "$file" -a -w "$file" -a -x "$file" ]
+	# ----------------------------------------------------
+	a=0;
+	if test $a -eq 1
+	then 	
+		echo "yes";
+	else
+		echo "no";
+	fi
+	# ----------------------------------------------------
+	a="abcdefg";
+	if echo $a | grep "abc"
+	then
+		echo "yes";
+	else
+		echo "no";
+	fi
+	# ----------------------------------------------------
+	file1="/var/log/messages"
+	if [ -f "$file1" ]
+	then
+		wc -l "$file1"
+	fi
+	# ----------------------------------------------------
+	read -p "input: " dir1
+	if [ -d "$dir1" ] 
+	then
+		echo "$dir1 exist";
+	else
+		echo "$dir1 not exist";
+		mkidr "$dir1"
+	fi 
+	# ----------------------------------------------------
+	uNum=`who | wc -l`
+	if (( uNum > 3 )) #[ "$uNum" -gt 3 ]
+	then
+		echo "$uNum";
+	else
+		echo "...";
+		who | awk '{print $1,$2}'
+	fi
+	# ----------------------------------------------------
+	service mysqld status &> /dev/null
+	if [ $? -ne 0 ]
+	then
+		echo "at time: `date` mysql is down" >> /var/log/messages
+		service mysqld restart;
+	fi
+	# ----------------------------------------------------
+	pgrep "vsftpd" &> /dev/null
+	if [ $? -eq 0 ]
+	then
+		echo "...";
+	elif [ -x "/etc/init.d/vsftpd" ]
+	then
+		service vsftpd start
+	else
+		echo "no";
+	fi
+	# ------------------------------------------------------------------------------------
+<a name="循环">
+3. 循环</a>
+	for关键字
+	for name in "tom" "jerry" "mike" "lee"
+	do
+		echo "$name";
+	done
+	# ----------------------------------------------------
+	vim file1
+	11 22 33
+	44 55 66
+	77 88 99
+	for i in `cat file` #`< file1`也可
+	do
+		echo $i;
+	done | tee file2
+	mail -s 'WRONG!' root,tom < file2
+	# ----------------------------------------------------
+	for i in /boot/*
+	do
+		echo "$i"; #basename "$i";
+	done
+	# ----------------------------------------------------	
+	for i in *.mp3
+	for i in ./*.mp3
+	for i in `seq -w 10`
+	for i in {1..10}
+	for i in $( ls )
+	# ----------------------------------------------------
+	for i in `find | grep "xml$" | grep "^comps"`
+	do
+ 		createrepo -g "$i" Server/
+	done
+	# ----------------------------------------------------
+	for i in "$@" #简写为for i
+	do
+		if [ -e "$i" ]
+		...
+	done
+    
+	for i
+	do
+		echo "$1";
+		shift;
+	done
+	# ----------------------------------------------------
+	for i
+	do
+		if [ -d "$i" ]
+		then
+			if [ "$i" == "." -o "$i" == ".." ] #[[ "$i" == "." || "$i" = ".." ]]
+			then
+				echo "skipping ..."
+			else
+				tar czf $i.tgz $i && rm -rf $i
+			fi
+		else
+			echo "$i is not directory";
+		fi
+	done
+	# ----------------------------------------------------
+	j=20
+	u=`grep "/bin/bash" /etc/passwd | cut -d: -f1`
+	for i in $u
+	do
+		num=`find /opt -user $i | wc -l`
+		if (( num > j ))
+		then
+			echo "$i have $num files"
+		fi
+	done
+	# ----------------------------------------------------
+	for i in `seq 6` #{1..6}
+	do
+		if (( $i % 2 == 0 ))
+		then
+			break; #continue, 默认为break 1, continue 1
+		fi
+		echo $i;
+	done
+	# ----------------------------------------------------
+	类c风格的for
+	for (( i=0; i<=3; i++ ))
+	do
+		for (( j=0; j<=5; j++))
+		do
+			echo -n "$i, $j";
+			(( j == 3 )) && break 2 #continue 2;
+		done
+	done
+	# ------------------------------------------------------------------------------------
+	while关键字
+	死循环的4种写法:
+	while :
+	while true
+	while [ 1 ]
+	while [ 0 ]
+	推荐while :
+	# ----------------------------------------------------
+	while :
+	do
+		read -p "input a string: " str
+		echo "$str" >> /tmp/input.txt
+		if [[ "$str" == "end" ]]; then
+			break;
+		fi
+	done
+	wc /tmp/input.txt
+	rm -f /tmp/input.txt
+	# ----------------------------------------------------
+	r=0
+	while (( $# > 0 ))
+	do
+		(( r+=$1 ))
+        shift;
+	done	
+	echo "the sum is: $r"
+	# ----------------------------------------------------
+	先添加stu1 ~ stu10
+	i=1
+	while (( i <= 10 )) #[ $i -le 20 ]
+	do
+		if (( i == 9 || i == 5)); then
+			(( i++ ));
+			continue;
+		fi
+		userdel -r stu$i
+		let i++;
+	done
+	# ----------------------------------------------------
+	size=$( ls -l $( find /etc -type f -a -name "*.conf" ) | awk '{print $5}' )
+	total=0
+	for i in "$size"
+	do
+		(( total+=i ))
+	done
+	echo "total size is $total"
+	# ----------------------------------------------------	
+	while读文件内容:
+	vim file1
+	tom g1,g2,g3 /home/tom
+	jerry g1,g2 /home/jerry
+	lee g1 /home/lee
+	
+	while read user groups homedir 
+	do 
+		echo -e "\$user=$user\t\$groups=$groups\t\$homedir=$homedir" 
+    	gid=$( echo $groups | cut -d, -f1 )
+    	echo "\$gid=$gid" 
+    	sleep 2
+	done < file1
+	# ----------------------------------------------------	
+	vim file1
+	tom
+	jerry
+	mike
+	lee
+	while read i
+	do
+    	arr[x++]=$i #放入数组中
+	done < file1
+	# ----------------------------------------------------	
+	vim file1
+    
+    
+    
+	lee
+	while read i
+	do
+    	arr[x++]=$i #放入数组中
+	done < file1
+	# ----------------------------------------------------	
+	#!/bin/bash
+	PRICE=$( expr $RANDOM % 1000 ) 
+	#$RANDOM % 10 [0, 10)之间的随机数
+	#$RANDOM % 20 [0, 20)之间的随机数
+	
+	TIMES=0
+	echo "0-999之间, 猜猜看是多少？"
+	while :
+	do
+    	read -p "请输入你猜测的价格数目: " INT
+    	let TIMES++
+    	if [ $INT -eq $PRICE ]
+		then
+        	echo "猜对了, 实际价格是 $PRICE"
+        	echo "你总共猜测了 $TIMES 次"
+        	exit 0
+    	elif [ $INT -gt $PRICE ]
+		then
+        	echo "太高了!"
+    	else
+        	echo "太低了!"
+    	fi
+	done
+		
+	# ----------------------------------------------------	
+	
+	用while 循环从文件中读取数据
+	while read line
+	do
+		echo "$line"
+	done < /etc/hosts
+
+	while read ip hn
+	do
+		echo "$hn --> $ip"
+	done < /etc/hosts
+	
+	# ----------------------------------------------------	
+	
+	a=3;
+	while [ $a -gt 0 ]
+	do
+		echo $a;
+		a=$[ $a -1 ]; #let a--;
+	done
+	# ----------------------------------------------------	
+	
+	i=1;
+	while [ $i -le $# ]
+	do
+		echo ${!i} #间接变量引用, 实用
+		let i++;
+	done
+	
+	# ----------------------------------------------------	
+	
+	创建20个文件夹dir01 - dir20
+	fun1()
+	{
+		[ ! -d $1 ] && { mkdir $1; echo "$1 create ok"; } || echo "$1 exist";
+	}
+	a=20;
+	while [ $a -gt 0 ]
+	do
+		if [ $a -le 9 ]
+		then
+			b="0${a}";
+			fun1 dir${b};
+		else
+			fun1 dir${a};
+		fi
+		let a--;
+	done
+	
+	# ----------------------------------------------------	
+	
+	read -p "input: " answer
+	while [[ "$answer" != "ds" ]]
+	do
+		echo "error, retry";
+		read -p "input: " answer
+	done
+
+	# ----------------------------------------------------	
+	until关键字
+	与while逻辑相反
+	
+	until [ -e /var/lib/mysql/mysql.sock ] 
+	#若/var/lib/mysql/mysql.sock文件不存在, 则说明mysqld服务未启动
+	do
+		/etc/init.d/mysqld start
+	done
+	
+	# ----------------------------------------------------	
+	
+	until [ -z $1 ] #$# -gt 0
+	do
+		echo "there are $# parameters: $*";
+		shift; #shift的使用
+	done
+	
+	# ----------------------------------------------------	
+	
+	a=3;
+	until [ $a -lt 0 ]
+	do
+		echo $a;
+		a=$[ $a - 1 ];
+	done
+	
+	# ----------------------------------------------------	
+	
+	循环监控网站的index.html, 如果访问不到页面, 则停止30秒, 继续测试
+	until wget -q http://192.168.10.8/index.html
+	do
+		sleep 30;
+	done
+	echo ok;
+	exit 0;
+	# ----------------------------------------------------	
+4. case与select关键字
+	a=0;
+	case $a in
+		[012])			echo aa;;
+		3|4|5)			echo bb;;
+		[a-z]|[A-Z])	echo cc;;
+		*)				echo dd;;
+	esac
+	# ----------------------------------------------------		
+	#!/bin/bash
+	PS3='What do you want to do:'
+	select ACTION in start stop status restart exit
+	do
+		case $ACTION in
+			start) 		service vsftpd start;;
+			stop) 		service vsftpd stop;;
+			status) 	service vsftpd status;;
+			restart) 	service vsftpd restart;;
+			exit) 		exit;;
+			*) 			echo 'Wrong.';;
+		esac
+	done
+	# ----------------------------------------------------	
+	select, 注意: 选择时用序号
+	select var in 'linux' 'unix' 'macos' 'windows'
+	do
+		break;
+	done
+	echo "you select is $var";
+	
+	# ----------------------------------------------------	
+	select常与case一起使用
+	PS3="please select: "
+	select var in 'linux' 'unix' 'macos' 'windows' 'quit'
+	do
+		case $var in
+			linux) echo "aa";;
+			unix)  echo "bb";;
+			quit)  exit 0;;
+			*)     echo "wrong";;
+		esac
+	done
+	
+	# ----------------------------------------------------	
+<a name="函数(function)">
+5. 函数(function)</a>
+	在Shell中, 函数就是一组命令或语句, 形成一个可用块
+	由两部分组成:
+	函数名(在一个脚本中必须唯一)
+	函数体(命令或语句集合)
+	# ----------------------------------------------------	
+	fun1() #先定义好, 后调用
+	{
+		if rpm -q gcc &> /dev/null
+		then
+			return 0;
+		else
+			return 1;
+		fi
+	}
+	if fun1
+	...
+	# ----------------------------------------------------	
+	给函数传值, 直接接收$1、$2等, 方法与脚本接收参数一样, 可以用$@ $#等
+	传1个就用$1, 传多个则用for i in "$@"
+	checkRPM()
+	{
+		for i in "$@" #for i即可
+		do
+			! rpm -q $i && yum install $i -y
+		done	
+	} &> /dev/null
+	checkRPM httpd mysql-server php gd
+	
+	# ----------------------------------------------------	
+	
+	递归调用:
+	#!/bin/bash
+	#comment
+	judge_ip()
+	{
+		if [[ "$1" =~ "abc" ]] #包含有abc
+		then
+			echo 'ok';
+		else
+			echo -n 'error, input: ';
+			read ip
+			judge_ip "$ip";
+		fi
+	}
+	judge_ip "$1"
+	# ----------------------------------------------------	
+	a=100
+	fun1()
+	{
+		echo $a;
+		#local b; 加与不加这行来看结果
+		b=200; #或local b=200
+	}
+	fun1
+	echo $b;
+	# ----------------------------------------------------	
+	
+	引用另一个文件:
+	lib.sh文件 #在lib.sh中写有很多公共函数
+	fun1()
+	{
+		date;
+	}
+	
+	test.sh文件
+	#!/bin/bash
+	. lib.sh #在test.sh中, .一下或source一下即引用了lib.sh文件, 然后就可以用里面的函数了
+	fun1
+	
+	# ----------------------------------------------------	
+	fun1()
+	{
+		rpm -q gcc &> /dev/null;
+		date;
+		lsls;
+		#无显式return时, 最后一条命令的$?即是返回值
+		return; 
+		#return后没接数值, 也是最后一条命令的$?即是返回值 
+	}
+	fun1
+	...
+	# ----------------------------------------------------	
+	fun1()
+	{
+		echo "$1";
+		echo "$2";
+	}
+	fun1 abc xyz #fun1 $1 $2, 给函数传参数
+	# ----------------------------------------------------	
+16. 执行shell脚本的方法
+	chmod +x test.sh
+	./test.sh #在子shell中执行, 一般用这种方法
+	
+	bash test.sh #在子shell
+	
+	source test.sh #. test.sh, 在当前shell
+	echo $a #a是在test.sh中定义的一个变量
+	# ----------------------------------------------------
+<a name="关于break continue return exit">
+17. 关于break continue return exit</a>
+	for i in `seq 6` #{1..6}
+	do
+		if (( $i % 2 == 0 ))
+		then
+			break; #continue, 默认为break 1, continue 1
+		fi
+		echo $i;
+	done
+	# ----------------------------------------------------
+	for (( i=0; i<=3; i++ ))
+	do
+		for (( j=0; j<=5; j++))
+		do
+			echo -n "$i, $j";
+			(( j == 3 )) && break 2 #continue 2;
+		done
+	done
+	# ----------------------------------------------------
+	while :
+	do
+		read -p "input a string: " str
+		echo "$str" >> /tmp/input.txt
+		if [[ "$str" == "end" ]]; then
+			break;
+		fi
+	done
+	wc /tmp/input.txt
+	rm -f /tmp/input.txt
+	# ----------------------------------------------------
+	先添加stu1 ~ stu10
+	i=1
+	while (( i <= 10 )) #[ $i -le 20 ]
+	do
+		if (( i == 9 || i == 5)); then
+			(( i++ ));
+			continue;
+		fi
+		userdel -r stu$i
+		let i++;
+	done
+	# ----------------------------------------------------
+	fun1()
+	{
+		date
+		return #上一条命令date的返回值, 后面的命令pwd不会执行了
+		#exit 退出当前脚本, 后面的命令pwd与外部的cal均不会执行了 
+		pwd
+	}
+	fun1
+	cal
+	# ----------------------------------------------------
+<a name="关于算术运算">
+18. 关于算术运算</a>
+	counter=0
+	for i in {1..5}
+	do
+		(( counter++ ))
+		(( counter+=1 ))
+		counter=$(( $counter+1 ));
+		counter=$[ $counter+1 ]
+		counter=$( expr $counter + 1 );
+		let counter+=1;
+		let counter++;
+	done
+	echo $counter;
+	# ----------------------------------------------------
+<a name="关于循环获取位置参数变量">
+19.关于循环获取位置参数变量</a>
+	$1 $2 $3 ...
+	1 增长到2 3 ...
+	i=1 i++
+	$$i, 这样是不行的, shell不支持变量名是变量
+	# ----------------------------------------------------
+	方法1: shift
+	使用shift, 执行一次shift, 位置参数往左移一个, 原先的$2变成了$1,
+	只要获取$1即可获取后面的$2 $3 ...的值
+	while (( $# > 0 ))
+	do
+		echo $1;
+		shift;
+	done
+	exit 0;
+	# ----------------------------------------------------
+	方法2: 使用$@(推荐)
+	for i in "$@"
+	do
+		echo "$i";
+	done
+	exit 0;
+	# ----------------------------------------------------
+	方法3: 间接引用
+	i=1;
+	while (( i <= $# ))
+	do
+		echo ${!i};
+		let i++; #(( i++ ))
+	done
+	exit 0;
+	# ----------------------------------------------------
+<a name="关于循环读取文件内容">
+20. 关于循环读取文件内容</a>
+	vim file1
+	a1 a2 a3
+	b1 b2 b3
+	c1 c2 c3
+	while read a b c
+	do
+		useradd $a #a的值分别为a1 b1 c1, 所以循环添加了3个用户
+	done < file1
+	# ----------------------------------------------------
+21. bash shell脚本调试
+	bash 的几个利于调试的参数:
+	-n 读取命令但不执行
+	-x 显示读取的所有行
+	-v 显示所有命令及参数
+
+	直接使用bash 命令执行脚本:
+	bash -nxv script.sh
+	bash -xv script.sh
+	
+	在脚本的第一行中加上这些调试参数:
+	#!/bin/bash -xv
+
+# ----------------------------------------------------------------------------------------
+</pre>
+</body>
+</html>

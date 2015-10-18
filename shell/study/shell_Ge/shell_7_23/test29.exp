@@ -1,0 +1,8 @@
+#!/usr/bin/expect
+#comment
+set ip [lindex $argv 0]
+set pa [lindex $argv 1]
+spawn ssh root@$ip df -hT > /tmp/file3
+#expect "*abc*" {send "aa\r"} "def" {send "bb\r"}
+expect "*yes/no*" {send "yes\r"; expect "*password*" {send "$pa\r"}} "*password*" {send "$pa\r"}
+expect eof

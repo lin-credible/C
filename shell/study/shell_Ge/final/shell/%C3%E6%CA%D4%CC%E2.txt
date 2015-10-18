@@ -1,0 +1,45 @@
+如何得到RedHat Linux系统的内核版本、发行版本?
+uname -a
+uname -r
+cat /etc/issue
+cat /etc/redhat-release 
+
+在RedHat/Centos Linux系统上, 某个进程占用了tcp的1234端口, 如何得到此进程的ID?
+lsof -i tcp:1234 
+lsof -i :1234
+netstat -ntaup | grep 1234
+
+如何查看apache进程数
+prefork模式:
+ps aux | grep "http" | grep -v "grep" | wc -l
+
+worker模式:
+pstree -a | grep "httpd" |wc -l
+前者进程模式, 后者线程模式
+
+在Shell环境下, 如何查看远程Linux系统运行了多少时间?
+uptime
+last | grep "system boot" | head -n 1
+
+linux下如何添加路由
+主机路由
+route add -host 192.168.1.1 dev eth0
+
+缺省网关路由
+route add default gw 192.168.1.254
+
+网络路由
+route add -net 192.168.10.0 netmask 255.255.255.0 dev eth0
+route add -net 192.168.20.0 netmask 255.255.255.0 gw 192.168.1.254
+
+ip route命令
+ip route add 192.168.10.0/24 via 192.168.1.1 dev eth0
+
+增加默认路由
+ip route add default via 192.168.1.254 dev eth0
+
+查看
+ip route show
+
+删除
+ip route del 192.168.10.0/24

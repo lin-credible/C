@@ -1,0 +1,22 @@
+#!/usr/bin/expect -f
+#comment
+if { $argc != 4 } {
+	puts "usage $argv0 ..."
+	exit 1
+}
+set ip [lindex $argv 0]
+set un [lindex $argv 1]
+set pa [lindex $argv 2]
+set fn [lindex $argv 3]
+spawn ftp $ip
+expect "*Name*"
+send "$un\r"
+expect "*Password:*"
+send "$pa\r"
+expect "*ftp>*"
+send "lcd /tmp\r"
+expect "*ftp>*"
+send "get $fn\r"
+expect "*ftp>*"
+send "quit\r"
+expect eof
