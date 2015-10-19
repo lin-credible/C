@@ -1,4 +1,5 @@
-Where there is a shell, there is a way.
+###Where there is a shell, there is a way.
+
 SHELL Scripts Programming
 bash (CentOS)
 shell?
@@ -6,15 +7,18 @@ shell?
 where is shell?
 
 常见的shell种类
-
+```
 cat /etc/shells
 chsh -l
 ls /bin/*sh 
 ls /sbin/nologin
 rpm -ivh tcsh ksh
-4. shell环境的切换
+```
+
+shell环境的切换
 
 临时切换:
+```
 ps u #ps aux
 pstree | grep "sh"
 ksh
@@ -24,8 +28,9 @@ echo $SHLVL #shell的层数
 
 chsh
 usermod -s /sbin/nologin tom
+```
 bash的常用快捷键
-
+```
 tab
 两次tab
 ctrl + i
@@ -38,6 +43,7 @@ ctrl + u
 ctrl + l
 ctrl + p
 alt  + . 上一条命令的最后一个参数
+```
 6. 命令历史
 
 vim /etc/profile
@@ -49,7 +55,7 @@ set | grep HISTSIZE
 !f #最近执行过fdisk -l /dev/sda
 !! #上一条
 shell脚本中的特殊字符
-
+```
 ""
 ''
 
@@ -71,11 +77,15 @@ echo "!!"
 {} 组合 touch a{1,2,3,4}
   创建命令块, 或叫匿名函数
 |
+```
+
 Linux 默认提供了三个I/O 通道
 Standard Input, 文件描述符: 0, 默认是键盘
 Standard Output, 文件描述符: 1, 默认是终端显示器
 Standard Error, 文件描述符: 2, 默认是终端显示器
+
 几条命令:
+```
 cut -d: -f1 /etc/passwd | sort -r | less
 ls -l | mail -s 'file list' tom@gmail.com
 cat files_to_delete.txt | xargs rm -f #将输入转化为参数列表
@@ -90,10 +100,11 @@ env | tee env.out
 $ 取变量的值
 #
 空格, 制表符, 换行符 当做空白
+```
 
-#########
 
 特殊符号:
+```
 ${var1}
 `` $(cmd) 命令替换
 ( cmd1; cmd2 ) &> /dev/null 子shell中执行命令, 注意可以取得当前父shell的本地变量
@@ -106,17 +117,20 @@ a=$[ 10 + 20 ] 数学运算
 (())复合命令, 做整数算术运算或算术比较, (( a=10*2 )), (( 10-10 )), (( 10>5 )), (( 10>20 )), 查看$?的值, 算出值非0则$?返回0
 (( a += 1 ))
 (( a=b % c ))
+```
 
 推荐作法: 整数数值的比较、运算均用(())
+```
 while (( a < b )); do
 done
 if (( a == 0 )); then
 fi
 for (( i=1; i<=5; i++ )); do
 done
-
+```
 推荐作法: 字符串的比较用[[]]
-if [[ $a = true ]]
+
+> if [[ $a = true ]]
 
 [] 必选其中一个 grep "ro[opq]t"
   测试: if [ 5 -gt 4 ]
@@ -125,30 +139,32 @@ if [[ $a = true ]]
 && 
 || 
 
-#########
 
-
-shell的特性
+##shell的特性
 
 命令别名
+```
 ls -lth #t 按修改时间排序, ls -l即修改时间
 alias
 unalias
-别名 函数 内部命令 外部命令
+```
+**别名 函数 内部命令 外部命令**
 
 #shell不需要启动一个单独的进程来运行内部命令
 #shell需要创建(fork)和执行(exec)一个新的子进程来运行外部命令
 
-#########
 命令替换
+```
 userNum=`w | grep "tty" | wc -l`
 rpm -qf `which fdisk`
 rm -rf `find / -user tom`
 pkg=$(rpm -qf $(which fdisk)) #里面的$()也可换成``
-#########
+```
 
-#########
+
 |与重定向
+
+```
 ls > file1 2>&1
 ls &> file1
 ls &>> file1 #bash4.0或以上支持
@@ -157,33 +173,35 @@ cat > /etc/yum.repos.d/rhel.repo << EOF
 abc
 def
 EOF
+```
 
 shell的输入输出控制
-
+```
 echo -n "abc"
 echo -e "abc\t\tabc"
 
-#########
 a=abc
 b=def
 a=$a'\n'$b
 echo $a
 echo -e $a
-#########
 
 name='tom'
 printf 'name is %s\n' $name
+```
 
 读取用户输入: read
-
+```
 read var1
 read var1 var2 var3
 read -p "please input a num: " var1
 read -s pwd #不显示出来
+```
 
- 变量分类
+变量分类
 
-本地变量(用户自定义变量)
+- 本地变量(用户自定义变量)
+```
 var1=ds
 var1="ds tech"
 var1='ds tech'
@@ -192,7 +210,6 @@ var2='cs $var1 cs'
 echo $var1
 echo ${var1}23
 
----------------------------------------------------------------
 echo ${var1:+$var2}
 echo $var1 $var2
 
@@ -204,7 +221,7 @@ echo $var1 $var2
 
 echo ${var1:=$var2}
 echo $var1 $var2
----------------------------------------------------------------
+
 var1=abcdefghij
 echo ${var1:3:2}
 echo ${var1:3}
@@ -219,8 +236,10 @@ readonly
 declare -r sum
 set
 unset var1
-#########
+```
+
 环境变量
+```
 var1=colin.com
 export var1
 export var1=colin.com
@@ -235,12 +254,14 @@ HOME
 UID
 HOSTNAME
 PWD
-#########
+```
+
 位置参数变量
+```
 $0 $1 ... ${10}
 service#$0 network#$1 restart#$2
+```
 
-#########
 关于循环获取位置参数变量:
 
 $1 $2 $3 ...
@@ -251,19 +272,24 @@ $$i, 这样是不行的, shell不支持变量名是变量,
 方法1: shift
 使用shift, 执行一次shift, 位置参数往左移一个, 原先的$2变成了$1,
 只要获取$1即可获取后面的$2 $3 ...的值
+```
 while (( $# > 0 ))
 do
 echo $1;
 shift;
 done
 exit 0;
+```
 方法2: 使用$@
+```
 for i in "$@"
 do
 echo "$i";
 done
 exit 0;
+```
 方法3: 间接引用
+```
 i=1;
 while (( i <= $# ))
 do
@@ -271,9 +297,10 @@ echo ${!i};
 let i++; #(( i++ ))
 done
 exit 0;
+```
 
-#########
 预定义变量(特殊变量)
+```
 $#
 $$ #本shell的PID值, 当前进程ID号
 
@@ -284,6 +311,7 @@ for i in "$*" 或 "$@"
 do
 echo $i;
 done
+```
 
 $? #[0, 255]整数
 每个命令在退出时都会返回一个退出状态值(exit status)
@@ -297,7 +325,7 @@ $? #[0, 255]整数
 
 bash只支持整数的运算, 浮点数运算可以使用bc
 echo "scale=3; 13/2" | bc #scale为小数点位数
-
+```
 declare -i a
 a=5+5
 
@@ -321,35 +349,43 @@ let b=$a**3
 
 let a++
 let a+=10
-#########
+```
+
 浮点数运算
+```
 rpm -q bc
 bc
 echo "3.14*2" | bc
 echo "scale=3; 10/3" | bc #3位小数
+```
 
 数组
 
 在白板上画出数组图, 0号元素, 1号元素, 2号元素
 目前只支持一维数组
 索引数组
+```
 names[0]=colin
 names[1]=jerry
 names[2]=lee
 names[3]=kevin
+```
 
 遍历数组:
+```
 for i in ${names[@]}
 do
 echo $i;
 done
-
-#########
+```
+```
 names[x++]=colin
 names[x++]=jerry
 names[x++]=lee
 names[x++]=kevin
+```
 用在循环中就很好的生成了数组, 或将一些值逐一放入数组中如: 
+```
 for i in tom jerry lee mike
 do
 names[x++]=$i;
@@ -358,15 +394,18 @@ for i in ${names[@]}
 do
 echo $i;
 done
------------------------------------------------------
+```
+
+```
 r=( `route -n | grep "UG"` ) #r变成了数组
 echo ${r[3]}
 
 var1="aa bb cc"
 var2=( $var1 ) #var2变成了数组
 echo ${var2[1]}
+```
 
-#########
+```
 echo ${names[0]}
 
 names=(colin jerry lee kevin)
@@ -386,19 +425,21 @@ echo ${#names[2]}
 
 unset names
 unset names[2]
+```
 
-#########
 关联数组
 bash 4.0版本开始支持关联数组
+```
 declare -A a
 a=([userName]=tom [pwd]=password1 [age]=20 [addr]=hncs)
 a[gender]=male
+```
 
 bash的启动配置文件(环境变量配置文件)
 
 登录shell
 login shell 指的是输入用户名、密码, 从系统登录时执行的第一个程序
-
+```
 /etc/profile
 
 /etc/profile.d/*.sh
@@ -408,16 +449,17 @@ login shell 指的是输入用户名、密码, 从系统登录时执行的第一
 ~/.bashrc
 
 /etc/bashrc
+```
 
 非登录shell
 登录系统后, 在login shell里启动的shell是非login shell
 如执行bash命令、在图形中打开终端均是开一个非登录shell
 login shell与non login shell在启动时执行不同的初始化脚本
-
+```
 /etc/profile.d/*.sh
 ~/.bashrc
 /etc/bashrc
-
+```
 su例子:
 su tom #非登录shell, 执行哪些文件?
 su - tom #登录shell, 执行哪些文件?
@@ -463,24 +505,23 @@ mkdir -p chap{01,02,03,04}/{html,text}
 touch file{1..10}
 
 一条find命令
+```
 find /etc -name *.conf
 touch a.conf b.conf
 find /etc -name *.conf
 find /etc -name "*.conf" #用""引起来
-
+```
 bash shell的基本语法
 
 条件测试
 任何命令都可以作为条件, 执行并检查命令的返回值
 
-#########
-
+```
 if [ ! -d "/tmp/{sda1,sda3}" ]
 then
 ( mkdir /tmp/{sda1,sda3} > /dev/null 2>&1 )
 fi
 
-#########
 
 if ls $1
 then
@@ -488,13 +529,15 @@ chmod 600 $1;
 else
 echo "the file $1 does not exist";
 fi;
-#########
+
 
 if test -e $1
 if [ -e $1 ]
+```
 
-#########
+
 对命令执行结果的判断:
+```
 if rpm -q gcc
 then 
 echo yes; 
@@ -503,8 +546,10 @@ echo no;
 fi
 
 rpm -q gcc && echo 'ok' || echo 'please install gcc !';
+```
 
 测试文件状态:
+```
 test -r "$file1" -a -s "$file1"
 [ -f file1 ]
 
@@ -512,10 +557,12 @@ test -r "$file1" -a -s "$file1"
 echo $?
 
 [ -e /mnt/Server ] && echo 'yes' || echo 'no';
+```
 
 整数值比较:
 中间可用逻辑运算符: -a -o !
-    [  $a -gt $b -a $b -gt $c ]  && echo 'a is largest'
+```
+[  $a -gt $b -a $b -gt $c ]  && echo 'a is largest'
 [ `who | wc -l` -le 10 ] && echo 'ok'
 
 var1=`df -hT | grep "/boot" | awk '{print $6}' | cut -d "%" -f 1`
@@ -525,6 +572,7 @@ if (( a > b && b > c ))
 then
 echo 'a is largest';
 fi
+```
 
 字符串比较:
 =或== 两个字符串相等
@@ -532,7 +580,8 @@ fi
 -z 空字符串
 -n 非空字符串
 
-    [[]]主要用来字符串比较
+[[]]主要用来字符串比较
+```
 if [[ $location =~ "-" || $location =~ "^:" ]] #包含有-, 或以:开头, ":$", 以:结尾
 
     
@@ -544,8 +593,10 @@ read -p  "input: " file
 [[ $LANG != "en.US" ]] && echo $LANG
 
 [[ -z `cat file1` ]] && echo "ok";
+```
 
 逻辑测试(逻辑判断)(列表)
+```
 [[ "$USER" = "tom" ]] || echo "not tom";
 
 [ -f /etc/file1 -o -f /etc/file2 ] && echo "ok"
@@ -553,8 +604,8 @@ read -p  "input: " file
 [ ! -x /etc/file1 ] && echo "no exec"
 
 [[ $USER == "root" && $SHELL = "/bin/bash" ]] && echo "ok"
+```
 
-#########
 if
 
 if 命令
@@ -565,14 +616,17 @@ fi
 若一条命令成功执行了, 就做什么, 没成功, 就做什么,
 3种做法:
 1.
+```
 if ls -d /dir1
 then
 echo "ok";
 else
 echo "fail";
 fi
----------
+```
+
 2.
+```
 ls -d /dir
 if (( $? == 0 )) #[ $? -eq 0 ]
 then
@@ -580,16 +634,19 @@ echo "ok";
 else
 echo "fail";
 fi
----------
-3. 列表
-ls -d /dir && echo ok || echo fail;
+```
 
-#########
+3. 列表
+```
+ls -d /dir && echo ok || echo fail;
+```
+
+```
 if ping -c3 server1
 then
 echo 'server1 is up';
 fi
-#########
+
 
 echo -n "how old are you"
 read age
@@ -598,9 +655,11 @@ then
 echo "error"
 exit 1;
 fi
-#########
+
+
 if [ -r $file -a -w $file -a -x $file ]
-#########
+
+
 a=0;
 if test $a -eq 1
 then 
@@ -608,7 +667,8 @@ echo "yes";
 else
 echo "no";
 fi;
-#########
+
+
 a="abcdefg";
 if echo $a | grep "abc"
 then
@@ -616,13 +676,15 @@ echo yes;
 else
 echo no;
 fi;
-#########
+
+
 file1="/var/log/messages"
 if [ -f $file1 ]
 then
 wc -l $file1
 fi
-#########
+
+
 read -p "input: " dir1
 if [ -d $dir1 ] 
 then
@@ -631,7 +693,8 @@ else
 echo "$dir1 not exist";
 mkidr $dir1;
 fi 
-#########
+
+
 uNum=`who | wc -l`
 if (( uNum > 3 )) #[ $uNum -gt 3 ]
 then
@@ -640,7 +703,8 @@ else
 echo "...";
 who | awk '{print $1,$2}'
 fi
-#########
+
+
 pgrep "vsftpd" &> /dev/null
 if [ $? -eq 0 ]
 then
@@ -651,38 +715,45 @@ service vsftpd start
 else
 echo "no";
 fi;
-#########
+
+
 service mysqld status &> /dev/null;
 if [ $? -ne 0 ]
 then
 echo "at time: `date` mysql is down" >> /var/log/messages;
 service mysqld restart;
 fi
+```
 
 
-#########
 for语句:
+```
 for day in "Monday" "Wednesday" "Friday"
 do
 echo $day;
 done
-#########
+```
+
+```
 for i in `cat iplist`
 do
 echo $i;
 done | tee file1
 mail -s "WRONG!" u1@ds.com,u2@ds.com < file1
-#########
+
+
 for file in /boot/*
 do
 echo "$file"; #basename "$file";
 done
-#########
+
+
 for i in `find | grep "xml$" | grep "^comps"`
 do
   createrepo -g ${i} Server/
 done
-#########
+
+
 
 for file in "$@" #简写为for file
 do
@@ -694,7 +765,6 @@ for i in "$@"
 for i in /etc/*.conf
 for i in $(command)
 
-#########
 
 for dir in "$@"
 do
@@ -711,7 +781,8 @@ else
 echo "skipping non directory $dir";
 fi
 done
-#########
+
+
 dir1="/opt/*"
 lmt=20
 u=`grep "/bin/bash" /etc/passwd | cut -d ":" -f 1`
@@ -723,12 +794,12 @@ then
 echo "$user have $num files"
 fi
 done
-#########
+
+
 for i in `seq 1 9` #seq 9
 for i in $( ls )
 for i in /opt/*
 
-#########
 
 result=0;
 while [ $# -gt 0 ]
@@ -738,13 +809,14 @@ shift;
 done 
 echo "the sum is: $result";
 
-#########
+
 for i in $* #$@也可, 或简写成for i也可
 do
 echo $1;
 shift;
 done
-#########
+
+
 for i in `seq 1 6` #{1..6} 或seq 6
 do
 if (( $i % 2 == 0 ))
@@ -755,7 +827,6 @@ echo $i;
 done
 echo "over";
 
-#########
 
 for (( i=0; i<=3; i++ ))
 do
@@ -767,7 +838,6 @@ echo -n "$i, $j";
 done
 done
 
-#########
 
 while :
 do
@@ -780,7 +850,7 @@ done
 wc /tmp/input.txt
 rm -f /tmp/input.txt
 
-#########
+
 i=1
 while (( i <= 20 )) #[ $i -le 20 ]
 do
@@ -792,7 +862,6 @@ userdel -r stu$i
 let i++;
 done
 
-#########
 
 size=$( ls -l $( find /etc -type f -a -name "*.conf" ) | awk '{print $5}' )
 #find /etc -type f -name "*.conf" | xargs ls -l | awk '{print $5}'
@@ -803,8 +872,6 @@ total=`expr $total + $i` #let total+=i (( total+=i ))
 done
 echo "total size is $total"
 
-
-#########
 
 counter=0
 for i in 1 2 3 4 5
@@ -818,26 +885,26 @@ let counter+=1;
 let counter++;
 done
 echo $counter;
-
-
-#########
+```
 
 类c风格的for
+```
 for (( i = 1; i <= 10; i++))
 do
 echo $i;
 done
+```
 
-#########
+
 while
 while 命令
 do
 ...
 done
 
-#########
 
 while读文件内容:
+```
 vim test1.sh
 while read user groups homedir 
 do 
@@ -852,8 +919,9 @@ tom g1,g2,g3 /home/tom
 jerry g1,g2 /home/jerry
 lee g1 /home/lee
 
-#########
+```
 
+```
 #!/bin/bash
 PRICE=$( expr $RANDOM % 1000 ) 
 #$RANDOM % 10 [0, 10)之间的随机数
@@ -861,6 +929,7 @@ PRICE=$( expr $RANDOM % 1000 )
 
 TIMES=0
 echo "0-999之间, 猜猜看是多少？"
+
 while :
 do
     read -p "请输入你猜测的价格数目: " INT
@@ -877,10 +946,11 @@ then
         echo "太低了!"
     fi
 done
+```
 
-#########
 
 用while 循环从文件中读取数据
+```
 while read LINE
 do
 echo $LINE
@@ -891,9 +961,9 @@ while read ip hn
 do
 echo "$hn --> $ip"
 done < /etc/hosts
+```
 
-#########
-
+```
 a=3;
 while [ $a -gt 0 ]
 do
@@ -901,7 +971,6 @@ echo $a;
 a=$[ $a -1 ]; #let a--;
 done
 
-#########
 
 i=1;
 while [ $i -le $# ]
@@ -909,10 +978,10 @@ do
 echo ${!i} #间接变量引用, 实用
 let i++;
 done
-
-#########
+```
 
 创建20个文件夹dir01 - dir20
+```
 fun1()
 {
 [ ! -d $1 ] && { mkdir $1; echo "$1 create ok"; } || echo "$1 exist";
@@ -929,31 +998,30 @@ fun1 dir${a};
 fi
 let a--;
 done
+```
 
-#########
-
+```
 read -p "input: " answer
 while [[ "$answer" != "ds" ]]
 do
 echo "error, retry";
 read -p "input: " answer
 done
-#########
+```
+
 until
 until 命令
 do
 ...
 done
 
-#########
-
+```
 until [ -e /var/lib/mysql/mysql.sock ] 
 #若/var/lib/mysql/mysql.sock文件不存在, 则说明mysqld服务未启动
 do
 /etc/init.d/mysqld start
 done
 
-#########
 
 until [ -z $1 ] #$# -gt 0
 do
@@ -961,7 +1029,6 @@ echo "there are $# parameters: $*";
 shift; #shift的使用
 done
 
-#########
 
 a=3;
 until [ $a -lt 0 ]
@@ -969,21 +1036,21 @@ do
 echo $a;
 a=$[ $a - 1 ];
 done
-
-#########
+```
 
 循环监控网站的index.html, 如果访问不到页面, 则停止30秒, 继续测试
+```
 until wget -q http://192.168.10.8/index.html
 do
 sleep 30;
 done
 echo ok;
 exit 0;
+```
 
-
-#########
 
 case语句
+```
 a=0;
 case $a in
 [012]) echo aa;;
@@ -991,19 +1058,20 @@ case $a in
 [a-z]|[A-Z]) echo cc;;
 *) echo dd;;
 esac
+```
 
-#########
 
 select语句: 选择时选择序号
+```
 select var in 'linux' 'unix' 'macos' 'windows'
 do
 break;
 done
 echo "you select is $var";
-
-#########
+```
 
 select常与case一起使用
+```
 PS3="please select: "
 select var in 'linux' 'unix' 'macos' 'windows' 'quit'
 do
@@ -1014,17 +1082,18 @@ quit)  exit 0;;
 *)     echo "wrong";;
 esac
 done
-
-#########
+```
 
 函数(function)
 在Shell中, 函数就是一组命令或语句, 形成一个可用块
 函数由两部分组成:
 函数名(在一个脚本中必须唯一)
 函数体(命令或语句集合)
-#########
+
+
 给函数传值, 直接接收$1、$2等, 方法与脚本接收参数是一样的, 可以用$@ $#等!
 传1个就用$1, 传多个则用for i in "$@"更好!
+```
 function checkRPM()
 {
 for i in "$@"
@@ -1033,10 +1102,11 @@ do
 done 
 } &> /dev/null
 checkRPM httpd mysql-server php gd
+```
 
-#########
 
 递归调用:
+```
 #!/bin/bash
 #comment
 judge_ip()
@@ -1051,7 +1121,8 @@ judge_ip "$ip";
 fi
 }
 judge_ip "$1"
-#########
+
+
 a=100
 fun1()
 {
@@ -1061,8 +1132,9 @@ b=200; #或local b=200
 }
 fun1
 echo $b;
-#########
+```
 
+```
 引用另一个文件:
 lib.sh文件 #在lib.sh中写很多公共函数
 fun1()
@@ -1071,11 +1143,12 @@ date;
 }
 
 test.sh文件
+
 #!/bin/bash
 . lib.sh #在test.sh中, .一下或source一下即引用了lib.sh文件, 然后就可以用里面的函数了
 fun1
 
-#########
+
 fun1() #先定义好, 后调用
 {
 if rpm -q gcc &> /dev/null
@@ -1087,7 +1160,8 @@ fi
 }
 if fun1
 ...
-#########
+
+
 fun1()
 {
 rpm -q gcc &> /dev/null;
@@ -1099,38 +1173,37 @@ return;
 }
 fun1
 ...
-#########
+
+
 fun1()
 {
 echo "$1";
 echo "$2";
 }
 fun1 abc xyz #fun1 $1 $2, 给函数传参数
+```
 
-#########
-
-###############################################################################
 expect
+
 
 expect这个名字准确说明了它的作用, 即"期待"交互式程序的输出 
 然后发送给该程序一些输入作为响应
 expect使用Tcl, 是Tcl脚本语言的扩展
 它的目的是与交互式程序进行通信
 
-#########
 
 在shell脚本中使用expect的方法, 一般是调用(执行)另写好的expect文件如:
+```
 #!/bin/bash
 #comment
 ./test2.exp &> /dev/null
 expect -f test2.exp &> /dev/null
-
-#########
+```
 
 yum install expect
 
-#########
 
+```
 vim test.exp
 #!/usr/bin/expect -f
 #comment
@@ -1147,7 +1220,7 @@ chmod +x test.exp
 
 expect -f test.exp
 
-#########
+
 
 #!/usr/bin/expect -f
 #comment
@@ -1156,7 +1229,7 @@ expect "*y/N*"
 send "y\r"
 expect eof
 
-#########
+
 
 #!/usr/bin/expect -f
 #comment
@@ -1180,7 +1253,7 @@ expect eof
 
 ./text.exp 192.168.6.6 tom 123456 #在命令行传3个参数进去
 
-#########
+
 
 #!/usr/bin/expect -f
 #comment
@@ -1193,8 +1266,7 @@ expect "*yes/no*" {send "yes\r"; expect "*password*" {send "$pa\r"}} \
 expect eof
 
 执行: ./test.exp 192.168.6.6 aixocm
-
-#########
+```
 
 屏幕上有输出, 怎样去掉? 放入bash脚本中&> /dev/null
 
@@ -1206,6 +1278,7 @@ expect -f test2.exp &> /dev/null
 echo $?
 
 带颜色的输出
+```
 echo -e "\033[37;44;1mhello\033[0m world"
 echo -e "\033[41mhello\033[0m world" #这样也可, 并不必要3个值, 仅设个背景色即可
 echo -e "\033[31mhello\033[0m world" #这样也可, 并不必要3个值, 仅设个前景色即可
@@ -1217,6 +1290,7 @@ world
 前景 红31 蓝34 白37
 背景 红41    蓝44白47
 1表示设置粗体(无明显效果)
+```
 
 dialog
 
@@ -1225,7 +1299,7 @@ rpm -q dialog
 每种对话框的输出或叫返回有两种:
 一种: 使用退出状态码($?), "OK"为0, "Cancle"和"NO"均为1
 另一种: 使用STDERR(2>)
-
+```
 a='abc'
 b='xyz'
 dialog --title "$a title" --msgbox "$b welcome" 15 50; 
@@ -1246,25 +1320,26 @@ var2=$( cat file1 )
 dialog --title "title1" --yesno "Welcome me.\n\nAre you continue?" 15 50
 #$?
 
----------
+
 dialog --clear --title "title" --checklist "pick a option" 15 50 3 \ 
 rh "release is redaht" on \
 suse "release is suse" off \
 ubutu "release is ubutu" off 2> file1
 cat file1
----------
 
----------
+
+
 dialog --clear --title "title" --nocancel --radiolist "t1\nt2\nt3\nt4" 15 50 3 \
 "128" "128M memory" on \
 "256" "256M memory" off \
 "512" "512M memory" off 2> file1
 a=`cat file1`
----------
+
+
 
 dialog --title "copying file" --gauge "abc" 15 50;
 
----------
+
 i=0;
 while (( i <= 100 ))
 do
@@ -1277,7 +1352,7 @@ echo "XXX";
 (( i++ )) #(( i+=5 ))
 sleep 0.1 #必要
 done | dialog --title "title" --gauge "abc" 15 50;
----------
+
 
 dialog --title "title" --form "abc" 10 30 7 
 "ip:" 1 1 "" 1 5 20 0
@@ -1294,13 +1369,13 @@ dialog --title "title" --form "abc" 10 30 7
 文本框的宽度
 "zz:" 7 1 "" 7 5 20 0
 文本框中可以输入的字符的宽度(个数), 若为0则等于前面的文本框的长度20}t$" fstab
-
+```
 
 
 Regular Expression
 
 正则得从编译原理里面的正规式说起了. 太酷了.
-
+```
 grep sed awk vim均实现了正则表达式
 如 cat /etc/passwd | grep "^[A-Z]"
 
@@ -1381,7 +1456,7 @@ bash提供的通配符与正则元字符的区别:
 ls *.h
 ls | grep "*.h"
 ls | grep ".*\.h"
-
+```
 
 POSIX类字符集
 /[[:digit:]] #数字
@@ -1393,7 +1468,7 @@ grep的使用
 global search regular expression(RE) and print out the line
 Unix的grep家族包括grep、egrep和fgrep
 
-
+```
 grep "root" /etc/passwd -c #有多少行匹配
 grep "root" /etc/passwd -n
 grep "root" /etc/passwd /etc/shadow -h
@@ -1411,18 +1486,21 @@ grep root\|ftp /etc/passwd -E
 egrep "^ro{2,5}t$" fstab
 egrep "^ro{2}t$" fstab
 egrep "^ro{2,}t$" fstab
-
+```
 
 1. seq
+
+```
 seq 4 #seq 1 4, 默认从1开始, 所以可省略1
 seq 3 6
 seq -3 3
 seq -w 10 #等宽输出, 与位数最多的对齐
-
+```
 
 2. tr
 tr是单个字符处理工具, 而不是字符串处理工具
- 
+
+```
   替换:
 1、将文件file中出现的"abc"替换为"xyz"
   cat file | tr "abc" "xyz" > new_file
@@ -1446,7 +1524,6 @@ cat file | tr "\011" "\040" > new_file
   echo $PATH | tr ":" "\n"
 
 
------------------------------------------------------------------------------------------
 
 删除:
 6、删除文件file中出现的"snail"字符
@@ -1481,15 +1558,19 @@ echo "aaaBBB999" | tr -s "a-zA-Z0-9" #将重复的大小写字母或数字均压
 echo "a       b" | tr -s " " #将重复的的空格压缩为1个
 
 echo "abc" | tr "a-z" "A-Z" #小写替换成大写
+```
 
 3. sort
+```
 对行进行排序, 默认字段分隔符是空白(与awk一样)
 sort -t: /etc/passwd #-t指定字段分隔符
 sort -t: -k3 /etc/passwd #-k3: 以第3个字段排序, 默认以第1个字段排序
 sort -t: -k3n /etc/passwd #n表示数值
 sort -t: -k3nr /etc/passwd #r表示反向
+```
 
 4. uniq
+```
 先sort再uniq:
 111
 111
@@ -1504,19 +1585,23 @@ vim file1
 222
 222
 333
----------
+
+
 uniq -u file1 #只打印唯一的行
----------
+
+
 uniq -c file1 #将每行重复出现的次数打印在行首
 3 111
 2 222
 1 333
+```
 
 5. cut
 默认字段分隔符为tab, 不是空白, 所以不好控制
 cut -d " " -f 2 #指定字段分隔符为1个空格, 打印第2列 
 
 6. sed
+```
 \s任意的空白符, 包括空格、制表符(tab)、换行符、中文全角空格 
 \s空白字符: [ \t\n\x0B\f\r]
 \t 制表符(tab) ('\u0009')  
@@ -1657,7 +1742,7 @@ sed -n '/ext4/p' /etc/fstab
 sed '/ext4/d' /etc/fstab
 sed '/^#/d' file1
 sed -e 's/old/new/g' -e 's/[0-9]$/&.yyy/' file1
-
+```
 
 7. awk
 是gawk的符号链接, 3位作者的名字的首字母(man awk), 是一门编程语言, 灵活性是awk最大的优势
@@ -1691,6 +1776,7 @@ awk -F "[ :]" '{print $1, $2}' file1
 字段分隔符是正则, 用""引起正则[ :], 防止shell将它解释成shell的元字符
 以空格或:作为字段分隔符, 空格与:一样均为分隔符(:就是空格!)
 
+```
 tom  savege  100
 molly  lee  20
 john  doe  300
@@ -1759,50 +1845,57 @@ awk 'BEGIN{FS=":"; OFS="---"}NR==2{print $1, $3}' /etc/passwd
 awk -F: '$1=="root"{print $0}' /etc/passwd
 a=root
 awk -F: -v var=$a  '$1==var{print $0}' /etc/passwd
-
+```
 
 流程控制
 if
+```
 awk -F: '{if($1=="root") print $1}' /etc/passwd
 awk -F: '{if($1=="root") {print $1; print $6}}' /etc/passwd
 awk -F: '{if($1=="root") print $1; else print $6}' /etc/passwd
 awk -F: '{if($1=="root") print $1; else if($1=="ftp") print $2; else if($1=="mail") print $3; else print NR}' /etc/passwd
 awk -F: '{var=($3>=500)?$1:"sys"; print $1 "\t" $3 "\t" var}' /etc/passwd
 awk -F: '{if($3==0) print $1, "admin"; else if($3>0 && $3<500) print $1, "sys"; else print $1, "user"}' /etc/passwd
+```
 
 BEGIN END的使用
+```
 awk -F: 'BEGIN{i=0}{i++}END{print i}' /etc/passwd
 awk -F: 'BEGIN{print NR, NF}' /etc/passwd #读前处理
 awk -F: 'END{print NR, NF}' /etc/passwd #读后处理
 awk -F: 'BEGIN{i=0}{i+=NF}END{print i}' /etc/passwd
 awk -F: 'BEGIN{i=0}$3>=500{print $1; i++}END{print i}' /etc/passwd #显示所有普通用户及其个数
+```
 
 break
 continue
 next #读取下一行
 exit #不再读取下一行, 读取动作终止, 转为执行end语句块
-
+```
 awk 'BEGIN{for(x=1;x<=5;x++){if(x==3) break; print x}}' #continue
 
 awk -F: '{if(NR>3) next; print $1}END{print NR}' /etc/passwd
 awk -F: '{if(NR>3) exit; print $1}END{print NR}' /etc/passwd
-
+```
 
 循环语句
 for
+```
 awk 'BEGIN{for(x=1; x<=5; x++) print x}'
 awk 'BEGIN{for(i=1;i<=3;i++){for(j=1;j<=5;j++) print i, j}}'
 awk -F: '{for(x=NF;x>0;x--) print $x}' /etc/passwd
 awk -F: '/bash$/{for(x=NF;x>0;x--) printf "%-13s", $x; printf "\n"}' /etc/passwd
-
+```
 
 while
+```
 awk -F: '{while($3<3){print $3, $1; $3++}}' /etc/passwd
 awk 'BEGIN{i=1; while(i<10){if(i%2==0)print i; i++}}'
-
+```
 
 
 awk中的函数
+```
 awk 'BEGIN{print int(3.14159)}' #取整数部分
 awk 'BEGIN{x="abcdefg"; print substr(x, 4, 3)}'
 awk 'BEGIN{x="abcdefg"; print substr(x, 4)}'
@@ -1823,14 +1916,15 @@ awk -F: 'BEGIN{while(getline < "/etc/passwd") print $3 "\t" $1}'
 
 echo | awk -F: '{"grep root /etc/passwd" | getline; print $0}' #或打印$1
 echo | awk '{"date" | getline; print $0}'
+```
 
-#########
 
 awk字符串拼接(字符串转数字, 数字转字符串) 
 awk中数据类型是不需要定义的, 是自适应的, 有时候需要强制转换, 我们可以通过下面操作完成
 
 
 拼接
+```
 awk 'BEGIN{a=100;b=100;c=a""b; print c}'      
 100100
 awk 'BEGIN{a="aa";b="bb";c=a""b; print c}'      
@@ -1840,14 +1934,16 @@ aabb
 awk 'BEGIN{a="a";b="b";c=(a+b);print c}'  
 0
 +号操作符强制将左右两边的值转为数字类型, 然后进行操作
-
-#########
+```
 
 
 在awk中使用循环:
+```
 echo | awk '{for(i=0; i<=10; i++) print i}'
+```
 
 awk中的数组:
+```
 echo | awk '{arr["a"]="aa"; arr["b"]="bb"; arr["c"]="cc"; for(i in arr) print i, arr[i]}'
 生成数组
 vim file1
@@ -1858,4 +1954,4 @@ vim file1
 555
 666
 awk '{arr[x++]=$1}END{for(i=0;i<NR;i++)print arr[i]}' file1
-
+```
