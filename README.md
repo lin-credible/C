@@ -4,7 +4,7 @@
 
 ![coding](./coding.png)
 
-###[C](./c) 
+> ###[C](./c) 
 
 - basic
 
@@ -12,9 +12,10 @@
 
 - basic
 - angular
-- highchart
 
 > ###[shell](./shell)
+
+- test
 
 > ###[php](./php)
 
