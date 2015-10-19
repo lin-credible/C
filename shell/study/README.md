@@ -140,7 +140,7 @@ done
 || 
 
 
-##shell的特性
+shell的特性
 
 命令别名
 ```
@@ -1272,11 +1272,13 @@ expect eof
 屏幕上有输出, 怎样去掉? 放入bash脚本中&> /dev/null
 
 在bash脚本中调用expect文件:
+```
 #!/bin/bash
 #comment
 expect -f test2.exp &> /dev/null
 ./test2.exp &> /dev/null
 echo $?
+```
 
 带颜色的输出
 ```
