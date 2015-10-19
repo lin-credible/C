@@ -1748,35 +1748,45 @@ sed -e 's/old/new/g' -e 's/[0-9]$/&.yyy/' file1
 ```
 
 7. awk
+
 是gawk的符号链接, 3位作者的名字的首字母(man awk), 是一门编程语言, 灵活性是awk最大的优势
+
 awk 'BEGIN{commands}pattern {commands}END{commands}' file1
+
 BEGIN语句块可选, pattern语句块可选, {}语句块可选, END语句块可选
 
-就像一个用来读取行的while循环, 从第一行读至最后一行, 
-每读一行, 先检查该行与pattern是否匹配, 若匹配, 则执行{}中的语句, 
-然后再读取下一行
+就像一个用来读取行的while循环, 从第一行读至最后一行, 每读一行, 先检查该行与pattern是否匹配, 若匹配,则执行{}中的语句, 然后再读取下一行
 
 工作原理:
+
 1. 执行BEGIN{commands}语句块中的语句
+
 2. 从文件或stdin中读取第1行, 然后执行pattern {commands}, 重复这个过程, 直到所有行被读取完毕
+
 3. 执行END{commands}语句块中的语句
 
 默认以空白作为字段分隔符
+
 基本结构:
+
 awk 'BEGIN{commands}pattern {commands}END{commands}' file1
+
 awk 'BEGIN{print "start..."}{print $1}END{print "end..."}' file1
+
 awk 'BEGIN{i=0}{i++}END{print i}' file1 #文件总行数, 改为""双引号也可
 
 
 awk的基本介绍
-与sed一样, 均是一行一行的读取、处理, sed作用于一整行的处理, 而awk将一行分成数个字段来处理
-默认的字段分隔符为空白
 
+与sed一样, 均是一行一行的读取、处理, sed作用于一整行的处理, 而awk将一行分成数个字段来处理, 默认的字段分隔符为空白
+```
 vim file1
 abc def:hij:123:456:xyz:789
 awk -F "[ :]" '{print $1, $2}' file1
 输出abc def
+```
 字段分隔符是正则, 用""引起正则[ :], 防止shell将它解释成shell的元字符
+
 以空格或:作为字段分隔符, 空格与:一样均为分隔符(:就是空格!)
 
 ```
