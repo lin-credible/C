@@ -4,16 +4,15 @@
 
 ![coding](./coding.png)
 
-> ###[C](./c) 
-
-- base
-
-> ###[javascript](./javascript)
--
+> ###[javascript !important](./javascript)
 
 - base
 - angular
 - react 
+
+> ###[C](./c) 
+
+- base
 
 > ###[shell](./shell)
 
