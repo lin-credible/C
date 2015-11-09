@@ -6,12 +6,13 @@
 
 > ###[C](./c) 
 
-- basic
+- base
 
-> ###[javascript](./javascript)
+> ###``[javascript](./javascript)``
 
-- basic
+- base
 - angular
+- react 
 
 > ###[shell](./shell)
 
