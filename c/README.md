@@ -1,5 +1,3 @@
 # C
 
-I know I'm totally a newbie. 
-
-Buuuuuuuuuuuuuuut, I still like C mostly, just like Linux ^.^
+I know I'm not good at it, but I like it^.^
