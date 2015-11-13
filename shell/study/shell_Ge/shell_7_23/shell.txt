@@ -1,7 +1,5 @@
 * 1: 新节点
-
-
-企业SHELL脚本编程(Enterprise SHELL Scripts Programming)
+(SHELL Scripts Programming)
 使用系统: rhel6.1 bash-4.1.2
 第一章 Shell基础知识
 1. 什么是shell

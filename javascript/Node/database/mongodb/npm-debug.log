@@ -1,0 +1,27 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   'mongodb' ]
+2 info using npm@3.3.6
+3 info using node@v5.0.0
+4 verbose stack SyntaxError: Unexpected token )
+4 verbose stack     at exports.runInThisContext (vm.js:53:16)
+4 verbose stack     at Module._compile (module.js:404:25)
+4 verbose stack     at Object.Module._extensions..js (module.js:432:10)
+4 verbose stack     at Module.load (module.js:356:32)
+4 verbose stack     at Function.Module._load (module.js:311:12)
+4 verbose stack     at Module.require (module.js:366:17)
+4 verbose stack     at require (module.js:385:17)
+4 verbose stack     at Object.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/node_modules/bl/node_modules/readable-stream/lib/_stream_duplex.js:31:16)
+4 verbose stack     at Module._compile (module.js:425:26)
+4 verbose stack     at Object.Module._extensions..js (module.js:432:10)
+5 verbose cwd /Users/colintao/Colin/githubSpace/colin-stupid-codes/javascript/Node/database/mongodb
+6 error Darwin 14.3.0
+7 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "install" "mongodb"
+8 error node v5.0.0
+9 error npm  v3.3.6
+10 error Unexpected token )
+11 error If you need help, you may report this error at:
+11 error     <https://github.com/npm/npm/issues>
+12 verbose exit [ 1, true ]
