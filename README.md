@@ -1,22 +1,26 @@
-##Coding, as for me.
+##Coding for fun
 
 >When it comes to coding no one is the best and if you really enjoy it you’ll always keep progressing.
 
+```
+Write programs that do one thing and do it well
+```
+
 ![coding](./coding.png)
 
-> ###[javascript !important](./javascript)
+> ###[javascript](./javascript)
 
-- base
+- node
 - angular
-- react 
+- react
 
 > ###[C](./c) 
 
-- base
+- begining
 
 > ###[shell](./shell)
 
-- test
+- practicing
 
 > ###[php](./php)
 
