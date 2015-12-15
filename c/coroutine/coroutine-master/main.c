@@ -27,16 +27,16 @@ test(struct schedule *S) {
 	while (coroutine_status(S,co1) && coroutine_status(S,co2)) {
 		coroutine_resume(S,co1);
 		coroutine_resume(S,co2);
-	} 
+	}
 	printf("main end\n");
 }
 
-int 
+int
 main() {
 	struct schedule * S = coroutine_open();
 	test(S);
 	coroutine_close(S);
-	
+
 	return 0;
 }
 
