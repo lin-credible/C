@@ -53,7 +53,7 @@ _co_delete(struct coroutine *co) {
 
 struct schedule *
 coroutine_open(void) {
-	struct schedule *S = malloc(sizeof(*S));
+	struct schedule *S = malloc(sizeof(*S)); // var a; a = 1; 用法类似,编译器反正会这么搞的
 	S->nco = 0;
 	S->cap = DEFAULT_COROUTINE;
 	S->running = -1;
@@ -94,6 +94,7 @@ coroutine_new(struct schedule *S, coroutine_func func, void *ud) {
 			if (S->co[id] == NULL) {
 				S->co[id] = co;
 				++S->nco;
+                //printf("id: %d\n", id);
 				return id;
 			}
 		}
@@ -104,7 +105,7 @@ coroutine_new(struct schedule *S, coroutine_func func, void *ud) {
 
 static void
 mainfunc(uint32_t low32, uint32_t hi32) {
-	uintptr_t ptr = (uintptr_t)low32 | ((uintptr_t)hi32 << 32);
+	uintptr_t ptr = (uintptr_t)low32 | ((uintptr_t)hi32 << 32); //一个 >>，一个 << 啥用意?
 	struct schedule *S = (struct schedule *)ptr;
 	int id = S->running;
 	struct coroutine *C = S->co[id];
@@ -168,7 +169,7 @@ coroutine_yield(struct schedule * S) {
 	_save_stack(C,S->stack + STACK_SIZE);
 	C->status = COROUTINE_SUSPEND;
 	S->running = -1;
-	swapcontext(&C->ctx , &S->main);
+	swapcontext(&C->ctx , &S->main); // 没有找到给 S->main 赋值的地方, 这里就是置空了??
 }
 
 int

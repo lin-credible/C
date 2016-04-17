@@ -20,13 +20,16 @@ static void
 test(struct schedule *S) {
 	struct args arg1 = { 0 };
 	struct args arg2 = { 100 };
+	struct args arg3 = { 200 };
 
 	int co1 = coroutine_new(S, foo, &arg1);
 	int co2 = coroutine_new(S, foo, &arg2);
+	int co3 = coroutine_new(S, foo, &arg3);
 	printf("main start\n");
-	while (coroutine_status(S,co1) && coroutine_status(S,co2)) {
+	while (coroutine_status(S,co1) && coroutine_status(S,co2) && coroutine_status(S,co3)) {
 		coroutine_resume(S,co1);
 		coroutine_resume(S,co2);
+		coroutine_resume(S,co3);
 	}
 	printf("main end\n");
 }
