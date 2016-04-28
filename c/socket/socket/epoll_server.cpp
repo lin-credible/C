@@ -6,15 +6,15 @@ int main(int argc, char ** argv)
 	int listenfd, connectfd,epfd, n, nfds;
 	struct sockaddr_in serveraddr;
 	struct epoll_event ev,events[1000];
-	
+
 	char readbuff[MAXLINE + 1];
 
-	
+
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	bzero(&serveraddr, sizeof(serveraddr));
         int reuseAddr = 1;
         setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
-	
+
 	epfd=epoll_create(1000);
 	ev.data.fd = listenfd;
 	ev.events = EPOLLIN;
@@ -57,9 +57,9 @@ int main(int argc, char ** argv)
 				ev.events = EPOLLIN;
 				epoll_ctl(epfd, EPOLL_CTL_MOD, events[i].data.fd, &ev);
 			}
-		}	
-	} 
+		}
+	}
 	close(epfd);
-	close(listenfd);	
+	close(listenfd);
 }
 

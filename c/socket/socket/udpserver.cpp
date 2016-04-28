@@ -5,7 +5,7 @@ int main(int argc, char ** argv)
 	struct sockaddr_in serveraddr, clientaddr;
 	char recvline[MAXLINE];
 	socklen_t len = sizeof(clientaddr);
-		
+
 	bzero(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(12001);
@@ -13,7 +13,7 @@ int main(int argc, char ** argv)
 
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	bind(sockfd, (sockaddr*)&serveraddr, sizeof(serveraddr));
-	
+
 	while( (n = recvfrom(sockfd, recvline, sizeof(recvline), 0, (sockaddr*)&clientaddr,&len)) > 0)
 	{
 		recvline[n] = 0;

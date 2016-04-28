@@ -20,10 +20,8 @@ int main()
 	{
 		if((waitpid(-1, &istat, 0)) > 0 )
 			printf("child process exits \n");
-	}		
+	}
 	sleep(100);
 	return 0;
 }
-
-
 

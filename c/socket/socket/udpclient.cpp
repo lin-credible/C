@@ -10,12 +10,12 @@ int main(int argc, char ** argv)
 		printf("please input udpclient <ip addr>\n");
 		return 0;
 	}
-	
+
 	bzero(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(12001);
 	inet_pton(AF_INET, argv[1], &serveraddr.sin_addr);
-	
+
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	while(fgets(sendline, MAXLINE, stdin))
 	{
@@ -27,4 +27,4 @@ int main(int argc, char ** argv)
 		}
 	}
 }
-				 
+
