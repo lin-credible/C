@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
+"""
+Writer: colin
+Time: 2016-05-01
+"""
 
 import socket
 
@@ -22,7 +26,7 @@ def modify_buff_size():
             socket.SO_RCVBUF,
             RECV_BUF_SIZE)
 
-    bufzie = sock.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF)
+    bufsize = sock.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF)
     print "Buffer size [After]: %d" %bufsize
 
 if __name__ == '__main__':
@@ -32,7 +36,7 @@ if __name__ == '__main__':
 My output:
 Buffer size [Before]: 131072
 Buffer size [After]: 131072
-Right output:
+I think my output is:
 Buffer size [Before]: 131072
 Buffer size [After]: 8192
 '''

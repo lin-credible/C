@@ -78,8 +78,6 @@ class Route {
 }
 
 $test = matchUrl('http://www.google.com');
-
 var_dump($test);
-
 
 ?>
