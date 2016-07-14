@@ -1,0 +1,16 @@
+<html>
+<head>
+<script src="./jquery-3.0.0.js"></script>
+</head>
+<body>
+<span data-name="Colin", data-age="25"></span>
+<script>
+$(function(){
+    $("span").data("name", "test");
+    var name = $("span").data("name");
+    var age = $("span").data("age");
+    console.log("name: " + name + ", age: " + age);
+});
+</script>
+</body>
+</html>

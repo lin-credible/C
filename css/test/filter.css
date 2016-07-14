@@ -1,0 +1,8 @@
+.filter_btn i {
+  width: 24px;
+  height: 16px;
+  background: url(./filter.png);
+  position: relative;
+  background-position: -16px, 0px; }
+
+/*# sourceMappingURL=filter.css.map */

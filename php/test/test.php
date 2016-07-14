@@ -30,6 +30,14 @@ date_default_timezone_set('Asia/Shanghai');
 #echo $y = strtotime(date('YmdHis'), time() - 10800);
 
 
-var_dump(version_compare(PHP_VERSION, '7.0.0'));
+#var_dump(version_compare(PHP_VERSION, '7.0.0'));
+
+#$system = "libs";
+#$system_path = realpath($system) . "/";
+#$system_path = rtrim($system_path, '/').'/';
+
+$prefix = " haha heihei";
+#echo trim($prefix, '\\') . '\\' . "\n";
+echo trim($prefix) . '\\' . "\n";
 
 ?>

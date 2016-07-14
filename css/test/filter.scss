@@ -1,0 +1,13 @@
+@mixin sprite($left, $top) {
+  // background: transparent url(./filter.png) no-repeat $left $top;
+  
+  width: 24px;
+  height: 16px;
+  background: url(./filter.png);
+  position: relative;
+  background-position: $left, $top;
+}
+
+.filter_btn i {
+	@include sprite(-16px, 0px);
+}

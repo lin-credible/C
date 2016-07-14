@@ -1,0 +1,12 @@
+name: colin
+age: 25
+parents:
+ father: chuan
+ mather: cai
+sisters:
+ older: sai
+ younger: ya
+brothers:
+ - tr
+ - tzr
+ - thr
