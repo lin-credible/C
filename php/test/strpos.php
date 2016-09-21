@@ -13,13 +13,15 @@
 #var_dump($ret1);
 #var_dump($ret2);
 
-$url = 'test?hahaha';
-echo substr($url, 0, 4)."\n";exit;
+$url = 'testhahhhaha';
+print_r(explode('/', $url));exit;
+#echo substr($url, 0, 4)."\n";exit;
 #$url = 'testhahaha';
-$index = strpos($url, '?');
-#var_dump($index);exit;
+#$index = strpos($url, '，');
+$title = preg_match('/(,|，|:|：|\[|\]|［|］)/', $url, $matches) ? $matches[1] : '';
+var_dump($title);exit;
 $path = strtolower($index === false ? $url : substr($url, 0, $index));
-echo $path;
-echo "\n";
+#echo $path;
+#echo "\n";
 
 ?>

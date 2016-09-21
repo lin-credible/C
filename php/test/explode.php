@@ -1,5 +1,13 @@
 <?php
 
+$s = '服装;时尚短裙【颜色:蓝色】;';
+
+$arr = explode(';', $s);
+array_pop($arr);
+array_pop($arr);
+
+print_r($arr);exit;
+
 $str = 'A B C D   ? . * ';
 $pattern = '/\s+/u';
 $xxx = preg_split($pattern, $str);

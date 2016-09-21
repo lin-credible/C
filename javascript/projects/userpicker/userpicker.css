@@ -1,0 +1,273 @@
+@CHARSET "UTF-8";
+.userpicker,.erppicker{
+	min-height:40px;
+	border:1px solid #ccc;
+	padding-left: 38px;
+    position: relative;
+}
+.userpicker:after,.erppicker:after{
+	display:table;
+	content:" ";
+	clear:both;
+}
+.picker_cont .col1{
+	float:left;
+	width:70px;
+	height: 100%;
+	border-right:1px solid #e6e6e6;
+}
+.picker_cont .col1 li a{
+	padding: 10px 5px;
+  text-align: center;
+}
+.picker_cont .col2{
+	float:left;
+	width:435px;
+	padding:0 16px;
+}
+.picker_cont .col2 .search_box{
+	
+}
+.picker_cont .col2 .firstchar_list{
+	height:27px;
+	line-height:10px;
+	padding:1px 0;
+	margin-top: 14px;
+	font-size: 10px;
+	color:#8d8d8d;
+}
+.picker_cont .col2 .firstchar_list li{
+	padding:0 3px;
+}
+.picker_cont .col2 .user_all{
+	line-height:28px;
+	height:56px;
+	padding:14px 0;
+}
+.picker_cont .col2 .user_all span{
+	float:left;
+}
+.picker_cont .user_list li a{
+	line-height:28px;
+	padding:6px 0;
+	cursor:pointer;
+	display:block;
+}
+.picker_cont .user_list li.org_line{
+	padding:0;
+}
+.picker_cont .user_list li a:after{
+	display:table;
+	content:" ";
+	clear:both;
+}
+.picker_cont .user_list li.title a:hover{
+	cursor:default;
+	background:#fff;
+}
+.picker_cont .user_list li.mate_line:hover,
+.picker_cont .user_list li.group_line:hover{
+	background:#eee;
+}
+.picker_cont .user_list li a:hover{
+	background:#eee;
+}
+.picker_cont .user_list li img{
+	float:left;
+	width:28px;
+	height:28px;	
+	border-radius: 50%;
+  margin-right: 8px;
+}
+.picker_cont .user_list li .name{
+	float:left;
+	width: 125px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 28px;
+    white-space: nowrap;
+}
+.picker_cont .user_list li.org_line .name{
+	float:none;
+}
+.picker_cont .user_list .org{
+	float:right;
+	max-width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 28px;
+    white-space: nowrap;
+}
+.picker_cont .col3{
+	float:left;
+	padding:0 16px;
+	width:435px;
+}
+.picker_cont .col3 .title{
+	height:40px;
+	line-height:28px;
+	padding:6px 0;
+	color:#888888;
+}
+.picker_cont{
+	height:420px;
+	background:#fff;
+	border-radius:5px;
+}
+.picker_modal .modal-dialog{
+	width: 958px;
+}
+.picker_modal .firstchar_list span{
+	padding: 0 3px 3px;
+    float: left;
+    color: #dfdfdf;
+}
+.picker_modal .firstchar_list span.enable{
+	cursor:pointer;
+	color:#7090c8;
+}
+.picker_modal .col2 .left_body{
+	height: 340px;
+    overflow-x: auto;
+}
+.picker_modal .col2 .left_body {
+    height: 340px;
+    overflow-x: auto;
+}
+.picker_modal .col2 .left_body.with_claim {
+	height:300px;
+}
+.picker_modal .col2 .group_body .left_body,.picker_modal .col2 .org_body .left_body{
+	height: 340px;
+}
+.picker_modal .col2 .user_list{
+	position:relative;
+}
+.picker_modal .modal-body{
+	padding: 10px 15px 0 0;
+}
+.picker_modal .org_line a{
+	width: 100%;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height:40px;
+}
+.ztree .glyphicon{
+	font-size: 10px;
+    margin-right: 8px;
+    line-height: 27px;
+    width: 20px;
+}
+.ztree li ul{
+	margin-left:15px;
+}
+.picker_modal .sel_ul .glyphicon{
+	display:none;
+}
+.picker_modal .unsel_ul .group_line .img{
+	float: left;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 8px 24px 0 0;
+    border: 3px solid #bbbbbb;
+}
+.picker_modal .right_body{
+	height: 380px;
+    overflow: auto;
+}
+.userpicker:before,.erppicker:before{
+    content: "+";
+    font-size: 30px;
+    color: #4a90e2;
+    cursor: pointer;
+    padding: 0 11px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    line-height: 38px;
+}
+.userpicker>.user,.userpicker>.org,.userpicker>.group,.userpicker>.ext_group,.erppicker>.single{
+    float: left;
+    height: 28px;
+    line-height: 28px;
+    margin: 5px 7px 5px 0;
+    cursor: pointer;
+    background: #eee;
+    padding: 0 8px;
+    border-radius: 2px;
+}
+.userpicker>.user>span,.userpicker>.org>span,.userpicker>.group>span,.erppicker>.single>span{
+	max-width: 160px;
+    overflow: hidden;
+    height: 28px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.userpicker>.is_claim{
+	float: left;
+    height: 28px;
+    line-height: 28px;
+    margin: 7px 7px 7px 0;
+    cursor: pointer;
+    border:1px solid #eee;
+    padding: 0 8px;
+    border-radius: 2px;
+}
+.userpicker>.org:before{
+	content:"[部门]";
+	float: left;
+}
+.userpicker>.group:before{
+	content:"[组织]";
+	float: left;
+}
+.userpicker>div:hover i,.erppicker>div:hover i{
+	visibility:visible;
+}
+.userpicker>div img,.erppicker>div img{
+	  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  float:left;
+  margin-right:8px;
+}
+.userpicker>div span,.erppicker>div span{
+	float:left;
+}
+.userpicker>.user i,.userpicker>.org i,.userpicker>.group i,.userpicker>.ext_group i,.erppicker>.single i{
+	background:url(../../imgs/iwk.png) -32px -453px;
+	width:7px;
+	height:7px;
+	margin:10px 0 10px 7px;
+	float:right;
+	visibility: hidden;
+}
+.picker_cont .is_claim{
+	height: 40px;
+    padding: 6px 0;
+    line-height: 28px;
+    cursor: pointer;
+}
+.is_claim i{
+	float: left;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin-right: 8px;
+    background: url(../../imgs/iwk.png) -570px -52px;
+}
+.picker_modal .picker_cont .unsel_ul .title{
+	font-weight:bold;
+}
+#erppicker .modal-dialog{
+	width:980px;
+}
+#erppicker .picker_cont .col1{
+	width:80px;
+}
+#erppicker .picker_cont .user_list li .name{
+	width:390px;
+}
