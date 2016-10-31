@@ -1,43 +1,8 @@
 <?php
 date_default_timezone_set('Asia/Shanghai');
 
-#echo date('YmdHis',time() - 5 * 60);
-#echo "\n";
+$a = new stdClass();
 
-#echo strtotime('20150705143500');
-#echo "\n";
-#echo strtotime('20150705143600') + 60;
-#echo "\n";
-#echo strtotime(date('YmdHis',time() - 10800));
-#echo "\n";
-#echo strtotime('now');
-#echo "\n";
-#echo strtotime('now') - strtotime(date('YmdHis',time() - 24000));
+$a->abc[] = 'xxx';
 
-#echo $x = mktime(date('H'), date('i'), date('s'), date('m'), date('d'), date('Y')) - 10800;
-#echo "\n";
-#echo $y = strtotime(date('YmdHis'), time() - 10800);
-
-#echo strtotime(date('YmdHis',time() - 10800));
-#$unixtime = 1440840721000;
-#$unixtime = 1440840721;
-#echo date('Y/m/d H:i:s A T', $unixtime);
-#echo "\n";
-#echo date('Y/m/d H:i:s A T', $x);
-#echo "\n";
-#echo date('Y/m/d H:i:s A T', $y);
-
-#echo $y = strtotime(date('YmdHis'), time() - 10800);
-
-
-#var_dump(version_compare(PHP_VERSION, '7.0.0'));
-
-#$system = "libs";
-#$system_path = realpath($system) . "/";
-#$system_path = rtrim($system_path, '/').'/';
-
-$prefix = " haha heihei";
-#echo trim($prefix, '\\') . '\\' . "\n";
-echo trim($prefix) . '\\' . "\n";
-
-?>
+print_r($a);exit;
