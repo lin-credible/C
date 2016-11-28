@@ -1,0 +1,48 @@
+div.loading{
+	height: 20px;
+    width: 110px;
+    margin: 0 auto;
+}
+div.loading i{
+    background-color: #bbbbbb;
+    float: left;
+    height: 15px;
+    margin-left: 16px;
+    width: 15px;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation:bounce_circle 1.5s 0.6s linear infinite;
+    -moz-animation:bounce_circle 1.5s 0.6s linear infinite;
+    -webkit-animation:bounce_circle 1.5s 0.6s linear infinite;
+    -o-animation:bounce_circle 1.5s 0.6s linear infinite;
+}
+@keyframes bounce_circle{
+	0%{opacity:0.3;}
+	50%{opacity:1;}
+	100%{opacity:0.3;}
+}
+@-moz-keyframes bounce_circle{
+	0%{opacity:0.3;}
+	50%{opacity:1;}
+	100%{opacity:0.3;}
+}
+@-webkit-keyframes bounce_circle{
+	0%{opacity:0.3;}
+	50%{opacity:1;}
+	100%{opacity:0.3;}
+}
+@-o-keyframes bounce_circle{
+	0%{opacity:0.3;}
+	50%{opacity:1;}
+	100%{opacity:0.3;}
+}
+.loading i:first-child{
+	animation-delay:0.3s;
+}
+.loading i:last-child{
+	animation-delay:0.9s;
+}
+
+div.loading.fn_loading{
+    margin:20px auto 20px;
+}

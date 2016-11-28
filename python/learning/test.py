@@ -44,22 +44,59 @@
 # print factorial(10)
 
 
-import time
+# import time
+# 
+# def performance(unit):
+#     def perform_unit(f):
+#         def wrapper(*args, **kw):
+#             t1 = time.time()
+#             r = f(*args, **kw)
+#             t2 = time.time()
+#             t = (t2 - t1) * 1000 if unit =='ms' else (t2 - t1)
+#             print 'call %s() in %f %s' % (f.__name__, t, unit)
+#             return r
+#         return wrapper
+#     return perform_unit
+#     
+# @performance('ms')
+# def factorial(n):
+#     return reduce(lambda x,y: x*y, range(1, n+1))
+# 
+# print factorial(10)
 
-def performance(unit):
-    def perform_unit(f):
-        def wrapper(*args, **kw):
-            t1 = time.time()
-            r = f(*args, **kw)
-            t2 = time.time()
-            t = (t2 - t1) * 1000 if unit =='ms' else (t2 - t1)
-            print 'call %s() in %f %s' % (f.__name__, t, unit)
-            return r
-        return wrapper
-    return perform_unit
-    
-@performance('ms')
-def factorial(n):
-    return reduce(lambda x,y: x*y, range(1, n+1))
+# import os
+# print os.path.isdir(r'/Users/colintao/Colin/githubSpace/codes-test/python/learning')
 
-print factorial(10)
+
+# class Person(object):
+# 
+#     def __str__(self):
+#     	return self.name
+# 
+#     pass
+# 
+# p1 = Person()
+# p1.name = 'Bart'
+# 
+# p2 = Person()
+# p2.name = 'Adam'
+# 
+# p3 = Person()
+# p3.name = 'Lisa'
+# 
+# L1 = [p1, p2, p3]
+# L2 = sorted(L1, key = lambda item: item.name)
+# 
+# print L2[0].name
+# print L2[1].name
+# print L2[2].name
+
+class Person(object):
+    def __init__(self, name, score):
+        self.name = name
+        self.__score = score
+
+p = Person('Bob', 59)
+
+print p.name
+print p.__score
