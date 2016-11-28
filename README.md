@@ -7,27 +7,3 @@ Write programs that do one thing and do it well
 ```
 
 ![coding](./coding.png)
-
-> ###[javascript](./javascript)
-
-- node
-- angular
-- react
-
-> ###[C](./c) 
-
-- begining
-
-> ###[shell](./shell)
-
-- practicing
-
-> ###[php](./php)
-
-- basic test
-- mongodb
-- websocket
-
-> ###[python](./python)
-
-
