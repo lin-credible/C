@@ -34,7 +34,41 @@ class Utils {
         }
         return $days;
     }
+    
+    /* 求最长公共子序列，返回LCS的长度 */
+    function LCS($str1, $str2) {
+        $len1 = strlen($str1);
+        $len2 = strlen($str2);
+
+        if ($len1 == 0 || $len2 == 0) {
+            return 0;
+        }
+
+        $record = [];
+        for ($i = 0; $i <= $len1; $i++) {
+            $record[$i][0] = 0;
+        }
+        for ($j = 0; $j <= $len2; $j++) {
+            $record[0][$j] = 0;
+        }
+
+        for ($i = 1; $i <= $len1; $i++) {
+            for ($j = 1; $j <= $len2; $j++) {
+                if ($str1[$i-1] == $str2[$j-1]) {
+                    $record[$i][$j] = $record[$i-1][$j-1] + 1;
+                } else {
+                    $record[$i][$j] = max($record[$i-1][$j], $record[$i][$j-1]);
+                }
+            }
+        }
+
+        return $record[$len1][$len2];
+
+    }
 }
 
 $utils = new Utils();
 
+$lcs = $utils->LCS('abdc', 'adddhahhabheiheic');
+
+print_r($lcs); exit;
