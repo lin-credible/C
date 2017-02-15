@@ -1,13 +1,14 @@
 <?php
 
 /*
- * Test
+ * Utils
+ * @author: taolr
  *
  */
 
 class Utils {
 
-    /* 获取 某个月的最大天数（最后一天）*/
+    /* 获取某个月的最大天数（最后一天）*/
     function getMonthLastDay($month, $year) {
         switch ($month) {
             case 4 :
