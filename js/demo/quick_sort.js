@@ -1,7 +1,7 @@
-var data = [5, 8, 10, 3, 2, 18, 17, 9];
+var data = [5, 8, 10, 3, 2, 18, 17, 9, 10, 30];
 
 function quick_sort(data) {
-  var len = data.length,
+  let len = data.length,
     base_num = data[0],
     left_arr = [],
     right_arr = [];
@@ -10,11 +10,11 @@ function quick_sort(data) {
     return [];
   }
 
-  for (var $i = 1; $i < len; $i++) {
-    if (base_num > data[$i]) {
-      left_arr.push(data[$i]);
+  for (let i = 1; i < len; i++) {
+    if (base_num > data[i]) {
+      left_arr.push(data[i]);
     } else {
-      right_arr.push(data[$i]);
+      right_arr.push(data[i]);
     }
   }
 
