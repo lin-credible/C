@@ -10,8 +10,7 @@ function AnotherPerson(name) {
     Person.call(this, name);
 }
 
-var person = new Person('Colin'); /* error, why? */
+var person = new Person('Colin');
 console.log(person.name);
-//var anotherPerson = new AnotherPerson('Nicholas'); /* error */
-
+// var anotherPerson = new AnotherPerson('Nicholas'); /* error */
 
